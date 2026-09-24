@@ -85,7 +85,18 @@ pre.packet{margin:8px 0 0;background:#070b10;border:1px solid var(--line);border
 .note{font-size:12.5px;color:var(--muted);line-height:1.6;margin:8px 0 0}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:8px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-inline-end:5px;vertical-align:-1px}
+.legend .ln{display:inline-block;width:22px;border-top:2px solid #78aadc;margin-inline-end:6px;vertical-align:3px}
+.legend .ln.dash{border-top-style:dashed}
+.legend .ln.dot{border-top-style:dotted}
 .about p{color:#b8c7d6;line-height:1.75;font-size:14.5px;margin:0 0 8px}
+.about h3{font-size:14.5px;margin:14px 0 6px;color:var(--text)}
+.about ul{margin:0 0 8px;padding-inline-start:20px;color:#b8c7d6;line-height:1.7;font-size:14px}
+.about li{margin-bottom:3px}
+.about .cells{list-style:none;padding:0;display:grid;gap:6px}
+.about .cells li{display:grid;grid-template-columns:minmax(92px,auto) 1fr;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13.5px}
+.about .cells b{font-weight:700;color:var(--text)}
+.about .cells .n{color:var(--muted);font-size:12px}
+.about .src{font-size:12.5px;color:var(--muted)}
 kbd{background:#1a2532;border:1px solid #2a3a4c;border-bottom-width:2px;border-radius:5px;padding:0 5px;font-size:12px;font-family:"JetBrains Mono",monospace}
 @media (max-width:1050px){main{grid-template-columns:1fr}}
 @media (max-width:560px){
@@ -163,7 +174,7 @@ kbd{background:#1a2532;border:1px solid #2a3a4c;border-bottom-width:2px;border-r
 
   <div class="col">
     <section class="card">
-      <h2>🧠 המוח של זבוב <span class="sub">מודל מפושט בהשראת מפת FlyWire</span></h2>
+      <h2>🧠 המוח של זבוב <span class="sub">חיבורים מתוך FlyWire v783</span></h2>
       <canvas id="brain"></canvas>
       <div class="tools">
         <label class="switch"><input type="checkbox" id="autoSw"><span class="t"></span> המוח שולט ברובוט</label>
@@ -175,6 +186,11 @@ kbd{background:#1a2532;border:1px solid #2a3a4c;border-bottom-width:2px;border-r
         <span><i style="background:#ffc24b"></i>נוירונים יורדים</span>
         <span><i style="background:#3ee6a8"></i>מוטורי</span>
         <span><i style="background:#ff4d5e"></i>עיכוב</span>
+      </div>
+      <div class="legend edges">
+        <span><b class="ln"></b>סינפסות ישירות (FlyWire)</span>
+        <span><b class="ln dash"></b>מסלול של 2–3 סינפסות</span>
+        <span><b class="ln dot"></b>הנחה של המודל</span>
       </div>
     </section>
 
@@ -215,7 +231,26 @@ kbd{background:#1a2532;border:1px solid #2a3a4c;border-bottom-width:2px;border-r
     <section class="card about">
       <h2>🔬 על הפרויקט</h2>
       <p>ב־2024 פרסם קונסורציום FlyWire מפה מלאה של המוח של זבוב פירות בוגר (<i>Drosophila melanogaster</i>): כ־140 אלף נוירונים ועשרות מיליוני סינפסות. חוקרים הריצו סימולציה של המוח הזה והראו שהיא מנבאת התנהגויות אמיתיות של הזבוב.</p>
-      <p>המוח בלוח הזה הוא גרסה מוקטנת מאוד של הרעיון. כל עיגול מייצג קבוצה של נוירונים: עיניים, אנטנות, גלאי איום (LPLC2), הגוף הפטרייתי, הקומפלקס המרכזי ו־Giant Fiber, הנוירון של רפלקס הבריחה. משם עוברים האותות לנוירונים היורדים ולשרירי הכנפיים. כשמפעילים את „המוח שולט”, הזבוב מחפש ריח של פרי, נמשך לאור ובורח מאיומים בעצמו.</p>
+      <p>המוח בלוח הזה הוא גרסה מוקטנת של אותה מפה. כל עיגול הוא אוסף של סוגי תאים אמיתיים מ־FlyWire, והחיבורים ביניהם מחושבים מספירת הסינפסות האמיתית. כשמפעילים את „המוח שולט”, הזבוב מחפש ריח של פרי, נמשך לאור ובורח מאיומים בעצמו.</p>
+      <h3>מה אמיתי</h3>
+      <ul>
+        <li><b id="nDirect">15</b> חיבורים (קו רציף) הם סינפסות ישירות בין הקבוצות. העובי שלהם נקבע לפי החלק מהקלט של תאי היעד שמגיע מהקבוצה השולחת.</li>
+        <li>הסימן נקבע לפי הנוירוטרנסמיטר החזוי: GABA וגלוטמט מעכבים (אדום), אצטילכולין ושאר הנוירוטרנסמיטרים מעוררים.</li>
+        <li><b id="nIndirect">4</b> חיבורים (קו מקווקו) הם מסלולים של 2–3 סינפסות, כי אין ביניהם קשר ישיר: אונה אופטית ← קומפלקס מרכזי, גוף פטרייתי ← DN קדימה (מעכב), ועיכוב הדדי בין DN שמאל ל־DN ימין (בשני הכיוונים).</li>
+        <li>מה עוד עלה מהנתונים: LPLC2 ו־LC4 מספקים כחמישית מהקלט של Giant Fiber. תאי PFL3 בקומפלקס המרכזי מתחברים ישירות ל־DNa02, נוירון ההיגוי (כ־500 סינפסות). האונה האופטית מזינה גם את הגוף הפטרייתי. לעומת זאת, לא נמצא מסלול מ־Giant Fiber ל־DN קדימה, ולכן החיבור הזה הוסר.</li>
+      </ul>
+      <h3>מה עדיין מפושט</h3>
+      <ul>
+        <li>כל עיגול מתנהג כנוירון אחד עם רמת פעילות רציפה, במקום אלפי תאים שיורים ספייקים.</li>
+        <li>המשקל הוא הסימן כפול 7 כפול השורש השלישי של חלק הקלט. כך ארבעה סדרי גודל נדחסים לטווח שמודל קטן יכול לעבוד איתו.</li>
+        <li>היגוי לריח: המסלול מהאנטנות לנוירוני ההיגוי עובר דרך 3 סינפסות. הנתונים קובעים את הכיוון ואת היחס בין המסלולים, אבל את העוצמה קבענו ידנית. בנתונים גם הצד הנגדי מעורר, רק חלש פי 2.6, ובמודל הוא מעכב (קו מנוקד) כדי שהזבוב יפנה בבירור לצד של הריח.</li>
+        <li>משיכה לאור: לא נמצא מסלול עקבי מהפוטורצפטורים לנוירוני ההיגוי בתוך 3 סינפסות, ולכן החיבורים מהעיניים ל־DN נשארו ידניים.</li>
+        <li>שרירים ורגליים: הנוירונים המוטוריים נמצאים בחוט העצבי הגחוני, שאינו חלק מ־FlyWire (יש לו מפה נפרדת בשם MANC). גם החיבורים אליהם ידניים.</li>
+        <li>הספים, קבועי הזמן והרעש שגורם לזבוב לשוטט הם פרמטרים של המודל ולא נתונים מדודים.</li>
+      </ul>
+      <h3>אילו תאים יושבים בכל עיגול</h3>
+      <ul class="cells" id="cellList"></ul>
+      <p class="src">מקורות: FlyWire v783 (Dorkenwald et al. 2024; Schlegel et al. 2024, Nature). הנוירוטרנסמיטרים לפי Eckstein et al. 2024, ורשימת החיבורים בעיבוד של Shiu et al. 2024. הסקריפט שמחשב את החיבורים נמצא ב־<span class="mono">data/build_brain.py</span>.</p>
     </section>
   </div>
 </main>
@@ -270,7 +305,7 @@ const NEURONS = [
   { id: 'eyeR', name: 'עין ימין', L: 0, c: '#4fb3ff' },
   { id: 'antL', name: 'אנטנה שמאל', L: 0, c: '#4fb3ff' },
   { id: 'antR', name: 'אנטנה ימין', L: 0, c: '#4fb3ff' },
-  { id: 'loom', name: 'LPLC2 · איום', L: 0, c: '#4fb3ff' },
+  { id: 'loom', name: 'LPLC2/LC4 · איום', L: 0, c: '#4fb3ff' },
   { id: 'ol', name: 'אונה אופטית', L: 1, c: '#b57bff' },
   { id: 'al', name: 'אונת הריח', L: 1, c: '#b57bff' },
   { id: 'mb', name: 'גוף פטרייתי', L: 2, c: '#b57bff' },
@@ -283,15 +318,49 @@ const NEURONS = [
   { id: 'leg', name: 'רגליים · קפיצה', L: 4, c: '#3ee6a8' },
   { id: 'wR', name: 'כנף ימין', L: 4, c: '#3ee6a8' },
 ];
-const SYN = [ // [pre, post, weight]
-  ['eyeL', 'ol', 0.8], ['eyeR', 'ol', 0.8], ['antL', 'al', 0.9], ['antR', 'al', 0.9],
-  ['al', 'mb', 1.2], ['ol', 'cx', 0.8], ['mb', 'dnF', 0.9], ['cx', 'dnF', 0.6],
-  ['eyeL', 'dnL', 2.4], ['eyeR', 'dnR', 2.4], ['eyeL', 'dnR', -2.2], ['eyeR', 'dnL', -2.2],
-  ['antL', 'dnL', 3.2], ['antR', 'dnR', 3.2], ['antL', 'dnR', -3.0], ['antR', 'dnL', -3.0],
-  ['loom', 'gf', 3.5], ['gf', 'leg', 3], ['gf', 'dnF', -2], ['gf', 'wL', 1.5], ['gf', 'wR', 1.5],
-  ['dnL', 'dnR', -0.8], ['dnR', 'dnL', -0.8],
-  ['dnL', 'wR', 1.4], ['dnR', 'wL', 1.4], ['dnF', 'wL', 1.0], ['dnF', 'wR', 1.0],
+/* FLYWIRE:BEGIN — generated by data/build_brain.py, do not edit by hand */
+// [pre, post, weight, kind, synapses, hops]
+// kind: d = direct FlyWire synapses, i = 2-3 synapse FlyWire pathway, s = olfactory steering (FlyWire sign + ratio), m = model assumption
+const SYN = [
+  ['eyeL', 'ol', 1.29, 'd', 134516, 1],
+  ['eyeL', 'dnL', 2.4, 'm', 0, 0],
+  ['eyeL', 'dnR', -2.2, 'm', 0, 0],
+  ['eyeR', 'ol', 1.29, 'd', 168363, 1],
+  ['eyeR', 'dnL', -2.2, 'm', 0, 0],
+  ['eyeR', 'dnR', 2.4, 'm', 0, 0],
+  ['antL', 'al', 3.25, 'd', 82759, 1],
+  ['antL', 'dnL', 3.2, 's', 0, 3],
+  ['antL', 'dnR', -3.0, 'm', 0, 3],
+  ['antL', 'dnF', 0.98, 's', 0, 3],
+  ['antR', 'al', 3.25, 'd', 82562, 1],
+  ['antR', 'dnL', -3.0, 'm', 0, 3],
+  ['antR', 'dnR', 3.2, 's', 0, 3],
+  ['antR', 'dnF', 0.98, 's', 0, 3],
+  ['loom', 'gf', 4.08, 'd', 1885, 1],
+  ['ol', 'mb', 1.82, 'd', 14542, 1],
+  ['ol', 'cx', 1.29, 'i', 2467, 2],
+  ['ol', 'dnL', -1.95, 'd', 656, 1],
+  ['ol', 'dnR', -1.95, 'd', 742, 1],
+  ['ol', 'dnF', 3.27, 'd', 3303, 1],
+  ['al', 'mb', 4.84, 'd', 330787, 1],
+  ['mb', 'dnF', -0.96, 'i', 602, 2],
+  ['cx', 'dnL', 1.5, 'd', 239, 1],
+  ['cx', 'dnR', 1.5, 'd', 269, 1],
+  ['cx', 'dnF', 2.25, 'd', 1765, 1],
+  ['gf', 'wL', 1.5, 'm', 0, 0],
+  ['gf', 'leg', 3.0, 'm', 0, 0],
+  ['gf', 'wR', 1.5, 'm', 0, 0],
+  ['dnL', 'dnR', -0.32, 'i', 0, 2],
+  ['dnL', 'wR', 1.4, 'm', 0, 0],
+  ['dnR', 'dnL', -0.32, 'i', 0, 2],
+  ['dnR', 'wL', 1.4, 'm', 0, 0],
+  ['dnF', 'dnL', 1.57, 'd', 275, 1],
+  ['dnF', 'dnR', 1.57, 'd', 298, 1],
+  ['dnF', 'wL', 1.0, 'm', 0, 0],
+  ['dnF', 'wR', 1.0, 'm', 0, 0],
 ];
+const FLYWIRE = {"eyeL": {"n": 5374, "label": "פוטורצפטורים R1–R6, R7, R8 בעין השמאלית"}, "eyeR": {"n": 5208, "label": "פוטורצפטורים R1–R6, R7, R8 בעין הימנית"}, "antL": {"n": 1116, "label": "נוירוני קולטני ריח (ORN) באנטנה השמאלית"}, "antR": {"n": 1133, "label": "נוירוני קולטני ריח (ORN) באנטנה הימנית"}, "loom": {"n": 314, "label": "LPLC2 + LC4: גלאי התקרבות (looming) שמזינים את Giant Fiber"}, "ol": {"n": 85254, "label": "כל האונה האופטית (למינה, מדולה, לובולה, לובולה פלייט) ונוירוני ההקרנה החזותיים, חוץ מ-LPLC2 ו-LC4"}, "al": {"n": 685, "label": "נוירוני ההקרנה של אונת הריח (ALPN)"}, "mb": {"n": 5273, "label": "תאי קניון (Kenyon cells) ונוירוני הפלט של הגוף הפטרייתי (MBON)"}, "cx": {"n": 2875, "label": "כל תאי הקומפלקס המרכזי: EPG, PFL, PFN, נוירוני הטבעת ועוד"}, "gf": {"n": 2, "label": "DNp01, ה-Giant Fiber, אחד בכל צד"}, "dnL": {"n": 2, "label": "DNa01 + DNa02 בצד שמאל: נוירוני היגוי"}, "dnR": {"n": 2, "label": "DNa01 + DNa02 בצד ימין: נוירוני היגוי"}, "dnF": {"n": 4, "label": "DNa03 (היעד העיקרי של הקומפלקס המרכזי) + DNp09 (P9, הליכה קדימה)"}, "wL": {"n": 0, "label": "נוירונים מוטוריים בחוט העצבי הגחוני (VNC), שאינו חלק מ-FlyWire"}, "leg": {"n": 0, "label": "נוירונים מוטוריים בחוט העצבי הגחוני (VNC), שאינו חלק מ-FlyWire"}, "wR": {"n": 0, "label": "נוירונים מוטוריים בחוט העצבי הגחוני (VNC), שאינו חלק מ-FlyWire"}};
+/* FLYWIRE:END */
 const BIAS = { dnF: 0.15, cx: 0.1, gf: -1.2, dnL: -0.1, dnR: -0.1, leg: -1 };
 const A = {}; NEURONS.forEach(n => A[n.id] = 0);
 const IDX = {}; NEURONS.forEach((n, i) => IDX[n.id] = i);
@@ -341,6 +410,7 @@ function brainStep(dt) {
   return { yaw: clamp((A.dnR - A.dnL) * 1.6 + wander, -1, 1), fwd: clamp(A.dnF, 0, 1), gf: A.gf, leg: A.leg };
 }
 
+const EDGE_DASH = { i: [5, 4], s: [5, 4], m: [1.5, 3.5] };
 let brainNodes = [];
 function layoutBrain(w, h) {
   const layers = [0, 1, 2, 3, 4].map(l => NEURONS.filter(n => n.L === l));
@@ -360,14 +430,16 @@ function drawBrain() {
   ctx.clearRect(0, 0, w, h);
   const P = id => brainNodes[IDX[id]];
   // edges
-  for (const [a, b, wt] of SYN) {
+  for (const [a, b, wt, kind] of SYN) {
     const p = P(a), q = P(b), act = A[a];
     ctx.strokeStyle = wt < 0 ? `rgba(255,77,94,${0.08 + act * 0.5})` : `rgba(120,170,220,${0.08 + act * 0.45})`;
     ctx.lineWidth = 0.6 + Math.abs(wt) * act * 1.2;
+    ctx.setLineDash(EDGE_DASH[kind] || []); // solid = FlyWire synapses, dashed = pathway, dotted = model
     ctx.beginPath(); ctx.moveTo(p.x, p.y);
     const mx = (p.x + q.x) / 2;
     ctx.bezierCurveTo(mx, p.y, mx, q.y, q.x, q.y); ctx.stroke();
   }
+  ctx.setLineDash([]);
   // spikes
   for (const sp of spikes) {
     const p = P(sp.s[0]), q = P(sp.s[1]), t = sp.p, mx = (p.x + q.x) / 2;
@@ -742,6 +814,20 @@ function frame(now) {
   drawArena(); drawBrain(); drawChart(); updateTelemetryUI();
   requestAnimationFrame(frame);
 }
+function renderCellList() {
+  const ul = $('#cellList');
+  for (const n of NEURONS) {
+    const info = FLYWIRE[n.id]; if (!info) continue;
+    const li = document.createElement('li'), name = document.createElement('b'), txt = document.createElement('span');
+    name.textContent = n.name; name.style.color = n.c;
+    txt.textContent = info.label;
+    if (info.n) { const c = document.createElement('div'); c.className = 'n'; c.textContent = info.n.toLocaleString('he-IL') + ' נוירונים'; txt.appendChild(c); }
+    li.append(name, txt); ul.appendChild(li);
+  }
+  $('#nDirect').textContent = SYN.filter(s => s[3] === 'd').length;
+  $('#nIndirect').textContent = SYN.filter(s => s[3] === 'i').length;
+}
+renderCellList();
 updateConnUI(); updateArmUI();
 log('מרכז השליטה של זבוב עלה 🪰', 'ok');
 log('טיפ: חמש, המריא והפעל „המוח שולט” — הזבוב יחפש את הבננה');

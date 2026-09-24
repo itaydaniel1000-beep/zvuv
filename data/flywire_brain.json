@@ -1,0 +1,497 @@
+{
+ "source": "FlyWire v783 (Dorkenwald et al. 2024, Schlegel et al. 2024); sign from Eckstein et al. 2024 via Shiu et al. 2024",
+ "rule": {
+  "gain": 7.0,
+  "exponent": 0.3333333333333333,
+  "min_frac": 0.001,
+  "min_syn": 100,
+  "odor_steer_gain": 3.2,
+  "odor_contra_w": -3.0
+ },
+ "groups": {
+  "eyeL": {
+   "label": "פוטורצפטורים R1–R6, R7, R8 בעין השמאלית",
+   "neurons": 5374,
+   "types": [
+    "R1-6",
+    "R7",
+    "R8"
+   ]
+  },
+  "eyeR": {
+   "label": "פוטורצפטורים R1–R6, R7, R8 בעין הימנית",
+   "neurons": 5208,
+   "types": [
+    "R1-6",
+    "R7",
+    "R8"
+   ]
+  },
+  "antL": {
+   "label": "נוירוני קולטני ריח (ORN) באנטנה השמאלית",
+   "neurons": 1116,
+   "types": [
+    "ORN_D",
+    "ORN_DA1",
+    "ORN_DA2",
+    "ORN_DA3",
+    "ORN_DA4l",
+    "ORN_DA4m",
+    "ORN_DC1",
+    "ORN_DC2",
+    "ORN_DC3",
+    "ORN_DC4",
+    "ORN_DL1",
+    "ORN_DL2d"
+   ]
+  },
+  "antR": {
+   "label": "נוירוני קולטני ריח (ORN) באנטנה הימנית",
+   "neurons": 1133,
+   "types": [
+    "ORN_D",
+    "ORN_DA1",
+    "ORN_DA2",
+    "ORN_DA3",
+    "ORN_DA4l",
+    "ORN_DA4m",
+    "ORN_DC1",
+    "ORN_DC2",
+    "ORN_DC3",
+    "ORN_DC4",
+    "ORN_DL1",
+    "ORN_DL2d"
+   ]
+  },
+  "loom": {
+   "label": "LPLC2 + LC4: גלאי התקרבות (looming) שמזינים את Giant Fiber",
+   "neurons": 314,
+   "types": [
+    "LC4",
+    "LPLC2"
+   ]
+  },
+  "ol": {
+   "label": "כל האונה האופטית (למינה, מדולה, לובולה, לובולה פלייט) ונוירוני ההקרנה החזותיים, חוץ מ-LPLC2 ו-LC4",
+   "neurons": 85254,
+   "types": [
+    "5-HT-IR  Tan",
+    "Am",
+    "Am1",
+    "C2",
+    "C3",
+    "CT1",
+    "Dm1",
+    "Dm10",
+    "Dm11",
+    "Dm12",
+    "Dm13",
+    "Dm14"
+   ]
+  },
+  "al": {
+   "label": "נוירוני ההקרנה של אונת הריח (ALPN)",
+   "neurons": 685,
+   "types": [
+    "CB0650",
+    "CB1296",
+    "CB1321",
+    "CB1461",
+    "CB1988",
+    "CB2004",
+    "CB2161",
+    "CB2372",
+    "CB2561",
+    "CB2589",
+    "CB2703",
+    "CB2711"
+   ]
+  },
+  "mb": {
+   "label": "תאי קניון (Kenyon cells) ונוירוני הפלט של הגוף הפטרייתי (MBON)",
+   "neurons": 5273,
+   "types": [
+    "KCa'b'-ap1",
+    "KCab",
+    "KCab-p",
+    "KCapbp-ap1",
+    "KCapbp-ap2",
+    "KCapbp-m",
+    "KCg-d",
+    "KCg-m",
+    "KCg-s1",
+    "KCg-s2",
+    "KCg-s3",
+    "MBON01"
+   ]
+  },
+  "cx": {
+   "label": "כל תאי הקומפלקס המרכזי: EPG, PFL, PFN, נוירוני הטבעת ועוד",
+   "neurons": 2875,
+   "types": [
+    "CB4171",
+    "Delta7",
+    "EL",
+    "EPG",
+    "EPGt",
+    "ER1",
+    "ER2",
+    "ER3a_a,ER3a_d",
+    "ER3a_b,ER3a_c",
+    "ER3d",
+    "ER3m",
+    "ER3p_a"
+   ]
+  },
+  "gf": {
+   "label": "DNp01, ה-Giant Fiber, אחד בכל צד",
+   "neurons": 2,
+   "types": [
+    "DNp01"
+   ]
+  },
+  "dnL": {
+   "label": "DNa01 + DNa02 בצד שמאל: נוירוני היגוי",
+   "neurons": 2,
+   "types": [
+    "DNa01",
+    "DNa02"
+   ]
+  },
+  "dnR": {
+   "label": "DNa01 + DNa02 בצד ימין: נוירוני היגוי",
+   "neurons": 2,
+   "types": [
+    "DNa01",
+    "DNa02"
+   ]
+  },
+  "dnF": {
+   "label": "DNa03 (היעד העיקרי של הקומפלקס המרכזי) + DNp09 (P9, הליכה קדימה)",
+   "neurons": 4,
+   "types": [
+    "DNa03",
+    "DNp09"
+   ]
+  }
+ },
+ "edges": [
+  {
+   "pre": "eyeL",
+   "post": "ol",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 134516,
+   "signed": 93718,
+   "frac": 0.006302124017343593,
+   "w": 1.29
+  },
+  {
+   "pre": "eyeL",
+   "post": "dnL",
+   "kind": "model",
+   "w": 2.4,
+   "note": "phototaxis shortcut, no pathway within 3 synapses"
+  },
+  {
+   "pre": "eyeL",
+   "post": "dnR",
+   "kind": "model",
+   "w": -2.2,
+   "note": "phototaxis shortcut, no pathway within 3 synapses"
+  },
+  {
+   "pre": "eyeR",
+   "post": "ol",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 168363,
+   "signed": 42093,
+   "frac": 0.006302124017343593,
+   "w": 1.29
+  },
+  {
+   "pre": "eyeR",
+   "post": "dnL",
+   "kind": "model",
+   "w": -2.2,
+   "note": "phototaxis shortcut, no pathway within 3 synapses"
+  },
+  {
+   "pre": "eyeR",
+   "post": "dnR",
+   "kind": "model",
+   "w": 2.4,
+   "note": "phototaxis shortcut, no pathway within 3 synapses"
+  },
+  {
+   "pre": "antL",
+   "post": "al",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 82759,
+   "signed": 82759,
+   "frac": 0.10004658854554793,
+   "w": 3.25
+  },
+  {
+   "pre": "antL",
+   "post": "dnL",
+   "kind": "steer",
+   "hops": 3,
+   "frac": 0.0002571053427011314,
+   "w": 3.2
+  },
+  {
+   "pre": "antL",
+   "post": "dnR",
+   "kind": "model",
+   "hops": 3,
+   "frac": 9.747916102023857e-05,
+   "w": -3.0,
+   "note": "data: net excitatory, 2.6x weaker than ipsilateral"
+  },
+  {
+   "pre": "antL",
+   "post": "dnF",
+   "kind": "steer",
+   "hops": 3,
+   "frac": 7.861548257818063e-05,
+   "w": 0.98
+  },
+  {
+   "pre": "antR",
+   "post": "al",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 82562,
+   "signed": 82504,
+   "frac": 0.10004658854554793,
+   "w": 3.25
+  },
+  {
+   "pre": "antR",
+   "post": "dnL",
+   "kind": "model",
+   "hops": 3,
+   "frac": 9.747916102023857e-05,
+   "w": -3.0,
+   "note": "data: net excitatory, 2.6x weaker than ipsilateral"
+  },
+  {
+   "pre": "antR",
+   "post": "dnR",
+   "kind": "steer",
+   "hops": 3,
+   "frac": 0.0002571053427011314,
+   "w": 3.2
+  },
+  {
+   "pre": "antR",
+   "post": "dnF",
+   "kind": "steer",
+   "hops": 3,
+   "frac": 7.861548257818063e-05,
+   "w": 0.98
+  },
+  {
+   "pre": "loom",
+   "post": "gf",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 1885,
+   "signed": 1885,
+   "frac": 0.19843311068723285,
+   "w": 4.08
+  },
+  {
+   "pre": "ol",
+   "post": "mb",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 14542,
+   "signed": 13514,
+   "frac": 0.017698386885334184,
+   "w": 1.82
+  },
+  {
+   "pre": "ol",
+   "post": "cx",
+   "kind": "indirect",
+   "hops": 2,
+   "syn": 2467,
+   "signed": 419,
+   "frac": 0.006237490552410345,
+   "w": 1.29
+  },
+  {
+   "pre": "ol",
+   "post": "dnL",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 656,
+   "signed": -252,
+   "frac": -0.021556880839887174,
+   "w": -1.95
+  },
+  {
+   "pre": "ol",
+   "post": "dnR",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 742,
+   "signed": -342,
+   "frac": -0.021556880839887174,
+   "w": -1.95
+  },
+  {
+   "pre": "ol",
+   "post": "dnF",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 3303,
+   "signed": 1689,
+   "frac": 0.10192957559201343,
+   "w": 3.27
+  },
+  {
+   "pre": "al",
+   "post": "mb",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 330787,
+   "signed": 328339,
+   "frac": 0.33085947338502286,
+   "w": 4.84
+  },
+  {
+   "pre": "mb",
+   "post": "dnF",
+   "kind": "indirect",
+   "hops": 2,
+   "syn": 602,
+   "signed": 10,
+   "frac": -0.002545781032107609,
+   "w": -0.96
+  },
+  {
+   "pre": "cx",
+   "post": "dnL",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 239,
+   "signed": 239,
+   "frac": 0.009828978001322293,
+   "w": 1.5
+  },
+  {
+   "pre": "cx",
+   "post": "dnR",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 269,
+   "signed": 261,
+   "frac": 0.009828978001322293,
+   "w": 1.5
+  },
+  {
+   "pre": "cx",
+   "post": "dnF",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 1765,
+   "signed": 1753,
+   "frac": 0.033285065509156934,
+   "w": 2.25
+  },
+  {
+   "pre": "gf",
+   "post": "wL",
+   "kind": "model",
+   "w": 1.5,
+   "note": "VNC, not in FlyWire"
+  },
+  {
+   "pre": "gf",
+   "post": "leg",
+   "kind": "model",
+   "w": 3.0,
+   "note": "VNC (GF -> TTMn jump muscle), not in FlyWire"
+  },
+  {
+   "pre": "gf",
+   "post": "wR",
+   "kind": "model",
+   "w": 1.5,
+   "note": "VNC, not in FlyWire"
+  },
+  {
+   "pre": "dnL",
+   "post": "dnR",
+   "kind": "indirect",
+   "hops": 2,
+   "syn": 0,
+   "signed": 0,
+   "frac": -9.458334473186176e-05,
+   "w": -0.32
+  },
+  {
+   "pre": "dnL",
+   "post": "wR",
+   "kind": "model",
+   "w": 1.4,
+   "note": "VNC, not in FlyWire"
+  },
+  {
+   "pre": "dnR",
+   "post": "dnL",
+   "kind": "indirect",
+   "hops": 2,
+   "syn": 0,
+   "signed": 0,
+   "frac": -9.458334473186176e-05,
+   "w": -0.32
+  },
+  {
+   "pre": "dnR",
+   "post": "wL",
+   "kind": "model",
+   "w": 1.4,
+   "note": "VNC, not in FlyWire"
+  },
+  {
+   "pre": "dnF",
+   "post": "dnL",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 275,
+   "signed": 275,
+   "frac": 0.011343831240445175,
+   "w": 1.57
+  },
+  {
+   "pre": "dnF",
+   "post": "dnR",
+   "kind": "direct",
+   "hops": 1,
+   "syn": 298,
+   "signed": 298,
+   "frac": 0.011343831240445175,
+   "w": 1.57
+  },
+  {
+   "pre": "dnF",
+   "post": "wL",
+   "kind": "model",
+   "w": 1.0,
+   "note": "VNC, not in FlyWire"
+  },
+  {
+   "pre": "dnF",
+   "post": "wR",
+   "kind": "model",
+   "w": 1.0,
+   "note": "VNC, not in FlyWire"
+  }
+ ]
+}

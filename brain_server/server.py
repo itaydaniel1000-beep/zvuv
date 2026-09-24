@@ -16,6 +16,7 @@ Run:  python brain_server/server.py            (see docs/brain-server-windows.md
 import argparse
 import asyncio
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -134,8 +135,25 @@ class Brain:
         return dict(t='brain', rates=groups, top=top, simMs=step_ms, wallMs=round(wall), total=self.sim_ms)
 
 
+# Pages allowed to connect (browsers send Origin; 'null' = index.html opened from disk).
+# Anything else is refused so random sites cannot use a public server's CPU.
+DEFAULT_ORIGINS = 'https://itaydaniel1000-beep.github.io,null,http://localhost,http://127.0.0.1'
+
+STATUS_PAGE = '''<!doctype html><meta charset="utf-8"><title>zvuv brain</title>
+<body style="font-family:system-ui;background:#070b10;color:#dbe7f3;max-width:640px;margin:40px auto;padding:0 16px;line-height:1.6" dir="rtl">
+<h1>🪰 המוח המלא של זבוב</h1>
+<p>השרת פועל: {status}. {clients} אתרים מחוברים עכשיו.</p>
+<p>זה שרת WebSocket, ואין מה לראות בו ישירות. פותחים את
+<a style="color:#3ee6a8" href="https://itaydaniel1000-beep.github.io/zvuv/">מרכז השליטה</a>
+ולוחצים „חבר למוח האמיתי”.</p>
+<p style="color:#7f93a8">FlyWire v783 · מודל של Shiu et al. 2024 · 138,639 נוירונים</p>'''
+
+
 async def serve(args):
-    import websockets
+    from http import HTTPStatus
+    from websockets.asyncio.server import serve as ws_serve
+    from websockets.datastructures import Headers
+    from websockets.http11 import Response
 
     state = dict(brain=None, sensors={}, status='בונה את הרשת (כמה דקות)…', clients=set())
 
@@ -178,7 +196,16 @@ async def serve(args):
             print(f"sim {out['total'] / 1000:7.2f}s  step {out['wallMs']:5d} ms  "
                   f"dnL {r['dnL']:5.1f}  dnR {r['dnR']:5.1f}  dnF {r['dnF']:5.1f}  gf {r['gf']:5.1f} Hz", flush=True)
 
-    async with websockets.serve(handler, args.host, args.port, max_size=2 ** 16):
+    def http_page(connection, request):
+        # Plain HTTP (the Space's page and health check) gets a status page; WebSocket goes through.
+        if request.headers.get('Upgrade', '').lower() == 'websocket':
+            return None
+        body = STATUS_PAGE.format(status=state['status'], clients=len(state['clients'])).encode()
+        return Response(HTTPStatus.OK, 'OK', Headers([('Content-Type', 'text/html; charset=utf-8'),
+                                                     ('Content-Length', str(len(body)))]), body)
+
+    origins = [o.strip() or None for o in args.origins.split(',')] + [None] if args.origins != '*' else None
+    async with ws_serve(handler, args.host, args.port, max_size=2 ** 16, origins=origins, process_request=http_page):
         print(f'listening on ws://{args.host}:{args.port}  (Ctrl+C to stop)', flush=True)
         await sim_loop()
 
@@ -199,7 +226,9 @@ def selftest(args):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--host', default='localhost')
+    ap.add_argument('--host', default='localhost', help='0.0.0.0 to accept connections from outside (cloud)')
+    ap.add_argument('--origins', default=os.environ.get('ALLOWED_ORIGINS', DEFAULT_ORIGINS),
+                    help="comma-separated web pages allowed to connect, or '*' for any")
     ap.add_argument('--port', type=int, default=8765)
     ap.add_argument('--step', type=float, default=50, help='simulated milliseconds per step (default 50)')
     ap.add_argument('--max-rate', type=float, default=150, help='Poisson rate (Hz) for a sensor value of 1; 150 as in the paper')

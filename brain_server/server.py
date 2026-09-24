@@ -57,7 +57,7 @@ REPORT = ('eyeL', 'eyeR', 'antL', 'antR', 'loom', 'ol', 'al', 'mb', 'cx', 'gf', 
 
 
 class Brain:
-    def __init__(self, max_rate, target, memory=False):
+    def __init__(self, max_rate, target, memory=False, input_types=None):
         prefs.codegen.target = target
         bb.fetch()
         comp = pd.read_csv(bb.RAW / 'Completeness_783.csv', index_col=0)
@@ -85,7 +85,10 @@ class Brain:
 
         # One Poisson source per sensory neuron (the paper drives neurons the same way).
         types = ann['cell_type'].values
-        drive_idx = {s: self.idx[s][np.isin(types[self.idx[s]], INPUT_TYPES[s])] for s in SENSORS}
+        input_types = input_types or INPUT_TYPES
+        drive_idx = {s: self.idx[s] if input_types.get(s) == 'all' else self.idx[s][np.isin(types[self.idx[s]], input_types[s])]
+                     for s in SENSORS}
+        self.drive_idx = drive_idx
         self.inp_targets = np.concatenate([drive_idx[s] for s in SENSORS])
         self.inp_slices, start = {}, 0
         for s in SENSORS:
@@ -122,6 +125,7 @@ class Brain:
         count = np.asarray(self.spk.count[:])
         diff, self.last_count = count - self.last_count, count
         hz = diff / (step_ms / 1000)
+        self.hz = hz  # per-neuron rates of the last step (used by odor_probe.py)
         self.sim_ms += step_ms
         groups = {k: round(float(hz[self.idx[k]].mean()), 2) for k in REPORT}
         active = np.argsort(hz)[::-1][:8]

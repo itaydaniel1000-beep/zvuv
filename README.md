@@ -46,4 +46,4 @@ npm i -D playwright && node data/behavior_test.cjs
 
 הוראות התקנה והפעלה צעד־צעד ל-Windows: `docs/brain-server-windows.md` (בקיצור: להתקין Python 3.12 וללחוץ פעמיים על `brain_server/start.bat`).
 
-התוכנית המקורית: `docs/stage2-plan.md`.
+התוכנית המקורית: `docs/stage2-plan.md`. האם המוח המלא מנווט לריח (ממצא: לא, ולמה): `docs/odor-steering-findings.md`.

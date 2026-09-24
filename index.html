@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>זבוב · מרכז שליטה</title>
+<meta name="description" content="מרכז שליטה לרובוט זבוב עם מוח מדומה בהשראת מפת המוח של זבוב הפירות">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪰</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b10; --panel:#0e151d; --panel2:#131c26; --line:#1f2c3a; --text:#dbe7f3; --muted:#7f93a8;
+  --accent:#3ee6a8; --accent2:#4fb3ff; --warn:#ffc24b; --danger:#ff4d5e; --odor:#9be15d; --light:#ffe066;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Heebo,system-ui,sans-serif}
+body{min-height:100vh;background:radial-gradient(1200px 600px at 80% -10%,#10263a 0%,transparent 60%),var(--bg)}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;direction:ltr;unicode-bidi:isolate}
+button,select,input{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;background:rgba(7,11,16,.85);backdrop-filter:blur(8px);flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px}
+.logo span.fly{font-size:28px;display:inline-block;animation:buzz .15s infinite alternate}
+@keyframes buzz{to{transform:translate(1px,-1px) rotate(3deg)}}
+.logo small{font-weight:500;color:var(--muted);font-size:14px}
+.hstat{display:flex;gap:10px;margin-inline-start:auto;align-items:center;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:14px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.dot.warn{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+.estop{background:var(--danger);border:0;color:#fff;font-weight:800;padding:10px 18px;border-radius:12px;cursor:pointer;box-shadow:0 0 0 3px rgba(255,77,94,.25)}
+.estop:active{transform:scale(.97)}
+main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;padding:16px 20px 30px;max-width:1500px;margin:0 auto}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:linear-gradient(180deg,var(--panel),#0b1118);border:1px solid var(--line);border-radius:var(--r);padding:14px;min-width:0}
+.card h2{margin:0 0 10px;font-size:16px;display:flex;align-items:center;gap:8px;font-weight:700}
+.card h2 .sub{color:var(--muted);font-weight:400;font-size:13px;margin-inline-start:auto}
+canvas{display:block;width:100%;border-radius:10px}
+#arena{height:420px;background:#0a1016;cursor:crosshair;touch-action:none}
+#brain{height:430px;background:#080d12}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--panel2);border:1px solid var(--line);padding:9px 14px;border-radius:10px;cursor:pointer;transition:.15s;font-weight:500}
+.btn:hover{border-color:#34506b}
+.btn.primary{background:var(--accent);color:#04130d;border-color:transparent;font-weight:700}
+.btn.blue{background:var(--accent2);color:#03101c;border-color:transparent;font-weight:700}
+.btn.active{outline:2px solid var(--accent);outline-offset:1px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{background:none;border:0;padding:6px 12px;border-radius:8px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:#1d2b3a;color:var(--text)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat .k{color:var(--muted);font-size:12.5px}
+.stat .v{font-size:22px;font-weight:700;margin-top:2px}
+.stat .v small{font-size:13px;color:var(--muted);font-weight:500}
+.bar{height:5px;background:#1a2633;border-radius:9px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0}
+#chart{height:110px;background:#0a1016;margin-top:10px}
+.pads{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-top:12px}
+.joy{position:relative;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,#15202c 0%,#0c141c 70%);border:1px solid var(--line);touch-action:none;margin:auto;user-select:none}
+.joy::before,.joy::after{content:"";position:absolute;background:#1d2a38}
+.joy::before{inset:50% 12px auto;height:1px}
+.joy::after{inset:12px auto 12px 50%;width:1px}
+.joy .knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#5ff0bd,#1f9d6f);box-shadow:0 4px 18px rgba(62,230,168,.35);z-index:1}
+.joy .lbl{position:absolute;font-size:11px;color:var(--muted)}
+.joywrap{text-align:center;font-size:13px;color:var(--muted)}
+.midbtns{display:flex;flex-direction:column;gap:8px;min-width:120px}
+label.sl{display:block;font-size:13px;color:var(--muted);margin:10px 0 2px}
+label.sl b{color:var(--text);font-weight:600;float:left}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.switch input{display:none}
+.switch .t{width:42px;height:24px;border-radius:99px;background:#223142;position:relative;transition:.2s}
+.switch .t::after{content:"";position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:#8aa0b5;transition:.2s}
+.switch input:checked + .t{background:var(--accent)}
+.switch input:checked + .t::after{right:21px;background:#04130d}
+#log{height:170px;overflow:auto;background:#070b10;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.6}
+#log div{white-space:pre-wrap}
+#log .t{color:var(--muted)}
+#log .ok{color:var(--accent)} #log .w{color:var(--warn)} #log .e{color:var(--danger)}
+pre.packet{margin:8px 0 0;background:#070b10;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px;overflow:auto;color:#9fc3e6;text-align:left}
+.field{width:100%;background:#070b10;border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+.note{font-size:12.5px;color:var(--muted);line-height:1.6;margin:8px 0 0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-inline-end:5px;vertical-align:-1px}
+.about p{color:#b8c7d6;line-height:1.75;font-size:14.5px;margin:0 0 8px}
+kbd{background:#1a2532;border:1px solid #2a3a4c;border-bottom-width:2px;border-radius:5px;padding:0 5px;font-size:12px;font-family:"JetBrains Mono",monospace}
+@media (max-width:1050px){main{grid-template-columns:1fr}}
+@media (max-width:560px){
+  header{padding:10px 16px;position:static} main{padding:12px 16px 24px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  #arena{height:300px} #brain{height:380px}
+  .pads{grid-template-columns:1fr 1fr}
+  .midbtns{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;order:3}
+  .midbtns .btn{flex:1}
+  .joy{width:130px;height:130px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="fly">🪰</span> זבוב <small>מרכז שליטה</small></div>
+  <div class="hstat">
+    <span class="pill"><span class="dot" id="connDot"></span><span id="connTxt">סימולציה</span></span>
+    <span class="pill"><span class="dot" id="armDot"></span><span id="armTxt">לא חמוש</span></span>
+    <span class="pill mono" id="clock">00:00</span>
+    <button class="estop" id="estop" title="עצירת חירום (Esc)">⛔ עצירת חירום</button>
+  </div>
+</header>
+
+<main>
+  <div class="col">
+    <section class="card">
+      <h2>🗺️ זירת טיסה <span class="sub">לחיצה על הזירה ממקמת את מה שנבחר</span></h2>
+      <canvas id="arena"></canvas>
+      <div class="tools">
+        <div class="seg" id="toolSeg">
+          <button data-tool="odor" class="on">🍌 ריח פרי</button>
+          <button data-tool="light">💡 אור</button>
+          <button data-tool="move">🪰 הזז זבוב</button>
+        </div>
+        <button class="btn" id="threatBtn">👋 איום מתקרב</button>
+        <button class="btn" id="clearBtn">ניקוי</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>🎮 שליטה ידנית <span class="sub">מקלדת: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> תנועה · <kbd>Q</kbd><kbd>E</kbd> סיבוב · <kbd>↑</kbd><kbd>↓</kbd> גובה</span></h2>
+      <div class="pads">
+        <div class="joywrap">
+          <div class="joy" id="joyL"><div class="knob"></div></div>
+          <div style="margin-top:6px">גובה ↕ · סיבוב ↔</div>
+        </div>
+        <div class="midbtns">
+          <button class="btn" id="armBtn">🔓 חימוש</button>
+          <button class="btn primary" id="takeoffBtn">🛫 המראה</button>
+          <button class="btn blue" id="landBtn">🛬 נחיתה</button>
+          <button class="btn" id="hoverBtn">⏸ ריחוף</button>
+        </div>
+        <div class="joywrap">
+          <div class="joy" id="joyR"><div class="knob"></div></div>
+          <div style="margin-top:6px">קדימה ↕ · הצידה ↔</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>📡 טלמטריה</h2>
+      <div class="stats">
+        <div class="stat"><div class="k">סוללה</div><div class="v" id="sBat">100<small>%</small></div><div class="bar"><i id="bBat"></i></div></div>
+        <div class="stat"><div class="k">גובה</div><div class="v" id="sAlt">0<small> ס״מ</small></div></div>
+        <div class="stat"><div class="k">מהירות</div><div class="v" id="sSpd">0<small> ס״מ/ש׳</small></div></div>
+        <div class="stat"><div class="k">כיוון</div><div class="v" id="sHdg">0<small>°</small></div></div>
+        <div class="stat"><div class="k">תדר כנפיים</div><div class="v" id="sHz">0<small> Hz</small></div></div>
+        <div class="stat"><div class="k">מצב</div><div class="v" id="sMode" style="font-size:18px">על הקרקע</div></div>
+      </div>
+      <canvas id="chart"></canvas>
+      <div class="legend"><span><i style="background:var(--accent)"></i>גובה</span><span><i style="background:var(--accent2)"></i>מהירות</span><span><i style="background:var(--warn)"></i>סוללה</span></div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section class="card">
+      <h2>🧠 המוח של זבוב <span class="sub">מודל מפושט בהשראת מפת FlyWire</span></h2>
+      <canvas id="brain"></canvas>
+      <div class="tools">
+        <label class="switch"><input type="checkbox" id="autoSw"><span class="t"></span> המוח שולט ברובוט</label>
+        <label class="switch"><input type="checkbox" id="reflexSw" checked><span class="t"></span> רפלקס בריחה</label>
+      </div>
+      <div class="legend">
+        <span><i style="background:#4fb3ff"></i>חישה</span>
+        <span><i style="background:#b57bff"></i>עיבוד מרכזי</span>
+        <span><i style="background:#ffc24b"></i>נוירונים יורדים</span>
+        <span><i style="background:#3ee6a8"></i>מוטורי</span>
+        <span><i style="background:#ff4d5e"></i>עיכוב</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>🪽 כנפיים</h2>
+      <label class="sl">תדר נפנוף <b class="mono" id="vHz">25 Hz</b></label>
+      <input type="range" id="rHz" min="1" max="250" value="25">
+      <label class="sl">משרעת בסיס <b class="mono" id="vAmp">80%</b></label>
+      <input type="range" id="rAmp" min="0" max="100" value="80">
+      <label class="sl">כיול שמאל/ימין <b class="mono" id="vTrim">0</b></label>
+      <input type="range" id="rTrim" min="-20" max="20" value="0">
+      <p class="note">זבוב פירות אמיתי מנפנף בערך 200 פעמים בשנייה. רובוט עם סרוו יסתדר עם 2–10 Hz, ומנגנון פיזואלקטרי יכול להגיע ליותר ממאה.</p>
+    </section>
+
+    <section class="card">
+      <h2>🔌 חיבור לרובוט</h2>
+      <div class="row">
+        <div class="seg" id="modeSeg">
+          <button data-mode="sim" class="on">סימולציה</button>
+          <button data-mode="ws">WebSocket</button>
+          <button data-mode="serial">USB</button>
+        </div>
+        <button class="btn primary" id="connBtn" style="margin-inline-start:auto">התחבר</button>
+      </div>
+      <div id="wsBox" style="display:none;margin-top:10px">
+        <input class="field mono" id="wsUrl" value="wss://zvuv.local:81/" spellcheck="false">
+      </div>
+      <p class="note" id="connNote">מצב סימולציה: זבוב וירטואלי מגיב לפקודות. אפשר לבדוק את הממשק לפני שהרובוט בנוי.</p>
+      <div class="note" style="margin-top:10px">הפקודה האחרונה שנשלחה (20 פעמים בשנייה):</div>
+      <pre class="packet mono" id="packet">{}</pre>
+    </section>
+
+    <section class="card">
+      <h2>📝 יומן</h2>
+      <div id="log" class="mono"></div>
+    </section>
+
+    <section class="card about">
+      <h2>🔬 על הפרויקט</h2>
+      <p>ב־2024 פרסם קונסורציום FlyWire מפה מלאה של המוח של זבוב פירות בוגר (<i>Drosophila melanogaster</i>): כ־140 אלף נוירונים ועשרות מיליוני סינפסות. חוקרים הריצו סימולציה של המוח הזה והראו שהיא מנבאת התנהגויות אמיתיות של הזבוב.</p>
+      <p>המוח בלוח הזה הוא גרסה מוקטנת מאוד של הרעיון. כל עיגול מייצג קבוצה של נוירונים: עיניים, אנטנות, גלאי איום (LPLC2), הגוף הפטרייתי, הקומפלקס המרכזי ו־Giant Fiber, הנוירון של רפלקס הבריחה. משם עוברים האותות לנוירונים היורדים ולשרירי הכנפיים. כשמפעילים את „המוח שולט”, הזבוב מחפש ריח של פרי, נמשך לאור ובורח מאיומים בעצמו.</p>
+    </section>
+  </div>
+</main>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+/* ---------------- state ---------------- */
+const S = {
+  mode: 'sim', connected: true, armed: false, flying: false, landing: false,
+  auto: false, reflex: true,
+  joy: { L: { x: 0, y: 0 }, R: { x: 0, y: 0 } },
+  cmd: { yaw: 0, climb: 0, pitch: 0, roll: 0 },
+  wing: { hz: 25, amp: 0.8, trim: 0, ampL: 0, ampR: 0 },
+  // world units = cm, arena 120 x 70
+  fly: { x: 60, y: 35, h: -Math.PI / 2, vx: 0, vy: 0, alt: 0, spd: 0 },
+  bat: 100, flightTime: 0, t: 0,
+  odor: { x: 95, y: 20 }, light: null, threat: null,
+  sensors: null, // real robot sensors if provided
+  escapeCd: 0, trail: [], hist: [],
+};
+const W = 120, H = 70;
+
+/* ---------------- log ---------------- */
+function log(msg, cls = '') {
+  const el = $('#log'), d = document.createElement('div');
+  const t = new Date().toLocaleTimeString('he-IL', { hour12: false });
+  d.innerHTML = `<span class="t">${t}</span> <span class="${cls}"></span>`;
+  d.lastChild.textContent = msg;
+  el.appendChild(d);
+  while (el.children.length > 200) el.firstChild.remove();
+  el.scrollTop = el.scrollHeight;
+}
+
+/* ---------------- canvas helpers ---------------- */
+function fit(c) {
+  const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) {
+    c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
+  }
+  const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w: r.width, h: r.height };
+}
+
+/* ---------------- brain model ---------------- */
+// Each node stands for a population of neurons. Layer 0 = sensory ... 4 = motor.
+const NEURONS = [
+  { id: 'eyeL', name: 'עין שמאל', L: 0, c: '#4fb3ff' },
+  { id: 'eyeR', name: 'עין ימין', L: 0, c: '#4fb3ff' },
+  { id: 'antL', name: 'אנטנה שמאל', L: 0, c: '#4fb3ff' },
+  { id: 'antR', name: 'אנטנה ימין', L: 0, c: '#4fb3ff' },
+  { id: 'loom', name: 'LPLC2 · איום', L: 0, c: '#4fb3ff' },
+  { id: 'ol', name: 'אונה אופטית', L: 1, c: '#b57bff' },
+  { id: 'al', name: 'אונת הריח', L: 1, c: '#b57bff' },
+  { id: 'mb', name: 'גוף פטרייתי', L: 2, c: '#b57bff' },
+  { id: 'cx', name: 'קומפלקס מרכזי', L: 2, c: '#b57bff' },
+  { id: 'gf', name: 'Giant Fiber', L: 2, c: '#ff6b7a' },
+  { id: 'dnL', name: 'DN שמאלה', L: 3, c: '#ffc24b' },
+  { id: 'dnF', name: 'DN קדימה', L: 3, c: '#ffc24b' },
+  { id: 'dnR', name: 'DN ימינה', L: 3, c: '#ffc24b' },
+  { id: 'wL', name: 'כנף שמאל', L: 4, c: '#3ee6a8' },
+  { id: 'leg', name: 'רגליים · קפיצה', L: 4, c: '#3ee6a8' },
+  { id: 'wR', name: 'כנף ימין', L: 4, c: '#3ee6a8' },
+];
+const SYN = [ // [pre, post, weight]
+  ['eyeL', 'ol', 0.8], ['eyeR', 'ol', 0.8], ['antL', 'al', 0.9], ['antR', 'al', 0.9],
+  ['al', 'mb', 1.2], ['ol', 'cx', 0.8], ['mb', 'dnF', 0.9], ['cx', 'dnF', 0.6],
+  ['eyeL', 'dnL', 2.4], ['eyeR', 'dnR', 2.4], ['eyeL', 'dnR', -2.2], ['eyeR', 'dnL', -2.2],
+  ['antL', 'dnL', 3.2], ['antR', 'dnR', 3.2], ['antL', 'dnR', -3.0], ['antR', 'dnL', -3.0],
+  ['loom', 'gf', 3.5], ['gf', 'leg', 3], ['gf', 'dnF', -2], ['gf', 'wL', 1.5], ['gf', 'wR', 1.5],
+  ['dnL', 'dnR', -0.8], ['dnR', 'dnL', -0.8],
+  ['dnL', 'wR', 1.4], ['dnR', 'wL', 1.4], ['dnF', 'wL', 1.0], ['dnF', 'wR', 1.0],
+];
+const BIAS = { dnF: 0.15, cx: 0.1, gf: -1.2, dnL: -0.1, dnR: -0.1, leg: -1 };
+const A = {}; NEURONS.forEach(n => A[n.id] = 0);
+const IDX = {}; NEURONS.forEach((n, i) => IDX[n.id] = i);
+const spikes = [];
+let noise = { cx: 0 };
+
+function senseWorld() {
+  if (S.sensors) return S.sensors; // real robot sensors override the virtual ones
+  const f = S.fly, out = { eyeL: 0, eyeR: 0, antL: 0, antR: 0, loom: 0 };
+  const side = (s, dist) => ({ x: f.x + Math.cos(f.h) * 2 + Math.cos(f.h + s * Math.PI / 2) * dist, y: f.y + Math.sin(f.h) * 2 + Math.sin(f.h + s * Math.PI / 2) * dist });
+  if (S.odor) {
+    const I = p => Math.exp(-((p.x - S.odor.x) ** 2 + (p.y - S.odor.y) ** 2) / (2 * 22 ** 2));
+    // left is -90deg from heading in screen coordinates
+    out.antL = I(side(-1, 4)); out.antR = I(side(1, 4));
+  }
+  if (S.light) {
+    const dx = S.light.x - f.x, dy = S.light.y - f.y, d = Math.hypot(dx, dy);
+    const ang = Math.atan2(dy, dx), br = Math.min(1, 900 / (d * d + 300)) + 0.25;
+    const eye = off => Math.max(0, Math.cos(ang - (f.h + off))) * br;
+    out.eyeL = eye(-0.7); out.eyeR = eye(0.7);
+  }
+  if (S.threat) out.loom = S.threat.loom;
+  return out;
+}
+
+function brainStep(dt) {
+  const inp = senseWorld();
+  noise.cx = lerp(noise.cx, (Math.random() - 0.5) * 2, dt * 2);
+  const net = {}; NEURONS.forEach(n => net[n.id] = BIAS[n.id] || 0);
+  for (const [a, b, w] of SYN) net[b] += A[a] * w;
+  net.cx += noise.cx * 0.4;
+  for (const n of NEURONS) {
+    let target;
+    if (n.L === 0) target = clamp((inp[n.id] || 0) + Math.random() * 0.04, 0, 1);
+    else target = Math.max(0, Math.tanh(net[n.id]));
+    const tau = n.id === 'gf' ? 0.03 : 0.12;
+    A[n.id] = lerp(A[n.id], target, clamp(dt / tau, 0, 1));
+  }
+  // random spike particles along active synapses
+  for (const s of SYN) {
+    if (Math.random() < A[s[0]] * Math.abs(s[2]) * dt * 3 && spikes.length < 260) spikes.push({ s, p: 0 });
+  }
+  for (let i = spikes.length - 1; i >= 0; i--) { spikes[i].p += dt * 1.8; if (spikes[i].p >= 1) spikes.splice(i, 1); }
+
+  // wandering in autonomous mode: small random turns from central complex noise
+  const wander = S.auto ? noise.cx * 0.35 * A.cx : 0;
+  return { yaw: clamp((A.dnR - A.dnL) * 1.6 + wander, -1, 1), fwd: clamp(A.dnF, 0, 1), gf: A.gf, leg: A.leg };
+}
+
+let brainNodes = [];
+function layoutBrain(w, h) {
+  const layers = [0, 1, 2, 3, 4].map(l => NEURONS.filter(n => n.L === l));
+  const padX = w < 520 ? 34 : 50, padY = w < 520 ? 50 : 40;
+  brainNodes = NEURONS.map(n => {
+    const col = layers[n.L], i = col.indexOf(n);
+    // sensory on the right (RTL reading order), motor on the left
+    const x = w - padX - (n.L / 4) * (w - padX * 2);
+    const y = padY + (col.length === 1 ? 0.5 : i / (col.length - 1)) * (h - padY * 2 - 14);
+    return { ...n, x, y };
+  });
+}
+
+function drawBrain() {
+  const c = $('#brain'), { ctx, w, h } = fit(c);
+  layoutBrain(w, h);
+  ctx.clearRect(0, 0, w, h);
+  const P = id => brainNodes[IDX[id]];
+  // edges
+  for (const [a, b, wt] of SYN) {
+    const p = P(a), q = P(b), act = A[a];
+    ctx.strokeStyle = wt < 0 ? `rgba(255,77,94,${0.08 + act * 0.5})` : `rgba(120,170,220,${0.08 + act * 0.45})`;
+    ctx.lineWidth = 0.6 + Math.abs(wt) * act * 1.2;
+    ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    const mx = (p.x + q.x) / 2;
+    ctx.bezierCurveTo(mx, p.y, mx, q.y, q.x, q.y); ctx.stroke();
+  }
+  // spikes
+  for (const sp of spikes) {
+    const p = P(sp.s[0]), q = P(sp.s[1]), t = sp.p, mx = (p.x + q.x) / 2;
+    const bx = (1 - t) ** 3 * p.x + 3 * (1 - t) ** 2 * t * mx + 3 * (1 - t) * t * t * mx + t ** 3 * q.x;
+    const by = (1 - t) ** 3 * p.y + 3 * (1 - t) ** 2 * t * p.y + 3 * (1 - t) * t * t * q.y + t ** 3 * q.y;
+    ctx.fillStyle = sp.s[2] < 0 ? '#ff4d5e' : '#e8f6ff';
+    ctx.beginPath(); ctx.arc(bx, by, 1.8, 0, 7); ctx.fill();
+  }
+  // nodes
+  const narrow = w < 520;
+  ctx.textAlign = 'center'; ctx.font = narrow ? '500 9.5px Heebo, sans-serif' : '500 11.5px Heebo, sans-serif';
+  for (const n of brainNodes) {
+    const a = A[n.id], r = 11 + a * 5;
+    ctx.shadowColor = n.c; ctx.shadowBlur = 4 + a * 26;
+    ctx.fillStyle = '#0d1520'; ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 7); ctx.fill();
+    ctx.globalAlpha = 0.25 + a * 0.75; ctx.fillStyle = n.c;
+    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+    ctx.strokeStyle = n.c; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 7); ctx.stroke();
+    ctx.fillStyle = '#a9bccf';
+    const above = narrow && n.L % 2 === 1;
+    ctx.fillText(n.name, n.x, above ? n.y - r - 6 : n.y + r + (narrow ? 11 : 13));
+  }
+  ctx.fillStyle = '#4c6075'; ctx.font = '11px Heebo, sans-serif';
+  ['חישה', 'עיבוד ראשוני', 'מרכזי', 'יורדים', 'שרירים'].forEach((t, i) => {
+    ctx.fillText(t, w - 50 - (i / 4) * (w - 100), 14);
+  });
+}
+
+/* ---------------- simulation ---------------- */
+function physics(dt) {
+  const f = S.fly, c = S.cmd;
+  if (S.mode !== 'sim' || !S.armed) {
+    f.vx = lerp(f.vx, 0, dt * 5); f.vy = lerp(f.vy, 0, dt * 5);
+    if (S.mode === 'sim' && !S.armed && f.alt > 0) { f.alt = Math.max(0, f.alt - 120 * dt); if (!f.alt) S.flying = false; }
+    return;
+  }
+  const vmax = S.flying ? 30 : 7; // walking is slow
+  f.h += c.yaw * (S.flying ? 2.6 : 1.8) * dt;
+  const fx = Math.cos(f.h), fy = Math.sin(f.h), sx = -fy, sy = fx;
+  const tvx = (fx * c.pitch + sx * c.roll) * vmax, tvy = (fy * c.pitch + sy * c.roll) * vmax;
+  f.vx = lerp(f.vx, tvx, clamp(dt * 3, 0, 1)); f.vy = lerp(f.vy, tvy, clamp(dt * 3, 0, 1));
+  f.x += f.vx * dt; f.y += f.vy * dt;
+  if (f.x < 3 || f.x > W - 3) { f.vx *= -0.5; f.x = clamp(f.x, 3, W - 3); }
+  if (f.y < 3 || f.y > H - 3) { f.vy *= -0.5; f.y = clamp(f.y, 3, H - 3); }
+  if (S.flying) {
+    if (S.landing) { f.alt -= 35 * dt; if (f.alt <= 0) { f.alt = 0; S.flying = false; S.landing = false; log('נחיתה הושלמה', 'ok'); } }
+    else f.alt = clamp(f.alt + c.climb * 45 * dt, 3, 200);
+  }
+  f.spd = Math.hypot(f.vx, f.vy);
+  const load = S.flying ? 0.35 + Math.abs(c.climb) * 0.2 + (S.wing.hz / 250) * 0.3 : 0.03;
+  S.bat = Math.max(0, S.bat - load * dt * 0.8);
+  if (S.bat <= 0 && S.flying) { log('סוללה ריקה — נחיתה אוטומטית', 'e'); land(); }
+}
+
+function updateThreat(dt) {
+  const t = S.threat; if (!t) return;
+  t.age += dt;
+  const r0 = t.r;
+  t.r = 2 + (t.age / 1.6) ** 3 * 12;
+  t.loom = clamp((t.r - r0) / dt / 15, 0, 1);
+  if (t.age > 1.6) S.threat = null;
+}
+
+function escape() {
+  const f = S.fly;
+  log('⚡ Giant Fiber ירה — רפלקס בריחה!', 'w');
+  if (S.threat) f.h = Math.atan2(f.y - S.threat.y, f.x - S.threat.x);
+  else f.h += Math.PI;
+  if (!S.armed) { S.armed = true; updateArmUI(); }
+  S.flying = true; S.landing = false; f.alt = Math.max(f.alt, 25);
+  f.vx = Math.cos(f.h) * 45; f.vy = Math.sin(f.h) * 45;
+  S.escapeCd = 1.5;
+  send({ t: 'escape', heading: Math.round(deg(f.h)) });
+}
+
+/* ---------------- controls ---------------- */
+const keys = new Set();
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'Escape') { estop(); return; }
+  keys.add(e.key.toLowerCase());
+  if (e.key === ' ') e.preventDefault();
+});
+addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+const k = (a, b) => (keys.has(a) ? 1 : 0) - (keys.has(b) ? 1 : 0);
+
+function Joy(el, target) {
+  const knob = el.querySelector('.knob'); let pid = null;
+  const set = (x, y) => { target.x = x; target.y = y; const r = el.clientWidth / 2 - 28; knob.style.transform = `translate(${x * r}px,${-y * r}px)`; };
+  const move = e => {
+    const r = el.getBoundingClientRect(), R = r.width / 2 - 20;
+    let x = (e.clientX - r.left - r.width / 2) / R, y = -(e.clientY - r.top - r.height / 2) / R;
+    const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
+    set(x, y);
+  };
+  el.addEventListener('pointerdown', e => { pid = e.pointerId; el.setPointerCapture(pid); move(e); });
+  el.addEventListener('pointermove', e => { if (e.pointerId === pid) move(e); });
+  const end = e => { if (e.pointerId === pid) { pid = null; set(0, 0); } };
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+}
+Joy($('#joyL'), S.joy.L); Joy($('#joyR'), S.joy.R);
+
+function computeCmd(brainOut) {
+  const J = S.joy, dz = v => Math.abs(v) < 0.06 ? 0 : v;
+  let yaw = clamp(dz(J.L.x) + k('e', 'q'), -1, 1);
+  let climb = clamp(dz(J.L.y) + k('arrowup', 'arrowdown'), -1, 1);
+  let pitch = clamp(dz(J.R.y) + k('w', 's'), -1, 1);
+  let roll = clamp(dz(J.R.x) + k('d', 'a'), -1, 1);
+  if (S.auto && S.armed) { // brain drives, the pilot can still nudge
+    yaw = clamp(yaw + brainOut.yaw, -1, 1);
+    pitch = clamp(pitch + brainOut.fwd * 0.8, -1, 1);
+  }
+  S.cmd = { yaw, climb, pitch, roll };
+  const w = S.wing, flap = S.armed && (S.flying || S.auto) ? 1 : 0;
+  const base = w.amp * flap;
+  w.ampL = clamp(base * (1 + w.trim / 100) * (1 + 0.3 * yaw + 0.15 * roll), 0, 1);
+  w.ampR = clamp(base * (1 - w.trim / 100) * (1 - 0.3 * yaw - 0.15 * roll), 0, 1);
+}
+
+function arm(on) {
+  if (!S.connected) { log('אין חיבור לרובוט', 'e'); return; }
+  S.armed = on; if (!on) { S.flying = false; S.landing = false; }
+  updateArmUI(); log(on ? 'הרובוט חמוש' : 'החימוש בוטל', on ? 'ok' : '');
+  send({ t: 'arm', on: on ? 1 : 0 });
+}
+function takeoff() {
+  if (!S.armed) { log('צריך לחמש לפני המראה', 'w'); return; }
+  if (S.bat < 5) { log('הסוללה חלשה מדי להמראה', 'e'); return; }
+  S.flying = true; S.landing = false; S.fly.alt = Math.max(S.fly.alt, 20);
+  log('המראה ↑', 'ok'); send({ t: 'takeoff' });
+}
+function land() { if (!S.flying) return; S.landing = true; log('נוחת…'); send({ t: 'land' }); }
+function hover() { S.joy.L.x = S.joy.L.y = S.joy.R.x = S.joy.R.y = 0; S.fly.vx = S.fly.vy = 0; log('ריחוף במקום'); send({ t: 'hover' }); }
+function estop() {
+  S.armed = false; S.flying = false; S.landing = false; S.auto = false; $('#autoSw').checked = false;
+  S.fly.vx = S.fly.vy = 0;
+  updateArmUI(); log('⛔ עצירת חירום!', 'e'); send({ t: 'estop' });
+}
+$('#armBtn').onclick = () => arm(!S.armed);
+$('#takeoffBtn').onclick = takeoff;
+$('#landBtn').onclick = land;
+$('#hoverBtn').onclick = hover;
+$('#estop').onclick = estop;
+$('#autoSw').onchange = e => { S.auto = e.target.checked; log(S.auto ? 'המוח שולט ברובוט 🧠' : 'חזרה לשליטה ידנית', 'ok'); };
+$('#reflexSw').onchange = e => { S.reflex = e.target.checked; };
+
+function updateArmUI() {
+  $('#armDot').className = 'dot' + (S.armed ? ' warn' : '');
+  $('#armTxt').textContent = S.armed ? 'חמוש' : 'לא חמוש';
+  $('#armBtn').textContent = S.armed ? '🔒 ביטול חימוש' : '🔓 חימוש';
+  $('#armBtn').classList.toggle('active', S.armed);
+}
+
+/* wings */
+const bindRange = (id, out, fn) => { const r = $(id); const u = () => { out.textContent = fn(+r.value); }; r.oninput = u; u(); };
+bindRange('#rHz', $('#vHz'), v => { S.wing.hz = v; return v + ' Hz'; });
+bindRange('#rAmp', $('#vAmp'), v => { S.wing.amp = v / 100; return v + '%'; });
+bindRange('#rTrim', $('#vTrim'), v => { S.wing.trim = v; return (v > 0 ? '+' : '') + v; });
+
+/* arena tools */
+let tool = 'odor';
+document.querySelectorAll('#toolSeg button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#toolSeg button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); tool = b.dataset.tool;
+});
+let view = { s: 1, ox: 0, oy: 0 };
+$('#arena').addEventListener('pointerdown', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  const x = (e.clientX - r.left - view.ox) / view.s, y = (e.clientY - r.top - view.oy) / view.s;
+  if (x < 0 || x > W || y < 0 || y > H) return;
+  if (tool === 'odor') { S.odor = { x, y }; log('ריח פרי מוקם בזירה 🍌'); }
+  if (tool === 'light') { S.light = { x, y }; log('מקור אור מוקם 💡'); }
+  if (tool === 'move') { S.fly.x = x; S.fly.y = y; S.trail = []; }
+});
+$('#threatBtn').onclick = () => {
+  const f = S.fly, a = f.h + (Math.random() - 0.5) * 2;
+  S.threat = { x: f.x + Math.cos(a) * 8, y: f.y + Math.sin(a) * 8, r: 2, age: 0, loom: 0 };
+  log('איום מתקרב…', 'w');
+};
+$('#clearBtn').onclick = () => { S.odor = null; S.light = null; S.trail = []; };
+
+/* ---------------- arena render ---------------- */
+function drawArena() {
+  const c = $('#arena'), { ctx, w, h } = fit(c);
+  const s = Math.min((w - 20) / W, (h - 20) / H); view = { s, ox: (w - W * s) / 2, oy: (h - H * s) / 2 };
+  ctx.clearRect(0, 0, w, h);
+  ctx.save(); ctx.translate(view.ox, view.oy); ctx.scale(s, s);
+  // floor grid
+  ctx.fillStyle = '#0c141c'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#15212d'; ctx.lineWidth = 1 / s;
+  for (let x = 0; x <= W; x += 10) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y <= H; y += 10) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.strokeStyle = '#2a3c4f'; ctx.lineWidth = 2 / s; ctx.strokeRect(0, 0, W, H);
+  // odor plume
+  if (S.odor) {
+    const g = ctx.createRadialGradient(S.odor.x, S.odor.y, 0, S.odor.x, S.odor.y, 40);
+    g.addColorStop(0, 'rgba(155,225,93,.35)'); g.addColorStop(1, 'rgba(155,225,93,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(S.odor.x, S.odor.y, 40, 0, 7); ctx.fill();
+    ctx.font = '6px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🍌', S.odor.x, S.odor.y);
+  }
+  if (S.light) {
+    const g = ctx.createRadialGradient(S.light.x, S.light.y, 0, S.light.x, S.light.y, 30);
+    g.addColorStop(0, 'rgba(255,224,102,.55)'); g.addColorStop(1, 'rgba(255,224,102,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(S.light.x, S.light.y, 30, 0, 7); ctx.fill();
+    ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.arc(S.light.x, S.light.y, 1.8, 0, 7); ctx.fill();
+  }
+  // trail
+  ctx.strokeStyle = 'rgba(62,230,168,.35)'; ctx.lineWidth = 0.5; ctx.beginPath();
+  S.trail.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
+  // fly
+  const f = S.fly, sc = 1 + f.alt / 180;
+  ctx.fillStyle = `rgba(0,0,0,${0.45 - f.alt / 600})`;
+  ctx.beginPath(); ctx.ellipse(f.x + f.alt * 0.04, f.y + f.alt * 0.06, 2.4, 1.6, f.h, 0, 7); ctx.fill();
+  ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.h); ctx.scale(sc, sc);
+  const flap = S.wing.ampL + S.wing.ampR > 0 ? Math.sin(S.t * Math.min(S.wing.hz, 40) * 2) : 0;
+  for (const side of [-1, 1]) {
+    const amp = side < 0 ? S.wing.ampL : S.wing.ampR;
+    ctx.save(); ctx.rotate(side * (2.3 - (0.3 + flap * 0.6) * (amp || 0.05)));
+    ctx.fillStyle = 'rgba(190,225,255,.35)'; ctx.strokeStyle = 'rgba(200,230,255,.6)'; ctx.lineWidth = 0.15;
+    ctx.beginPath(); ctx.ellipse(2.6, 0, 2.8, 1.1, 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore();
+  }
+  ctx.fillStyle = '#3b3326'; ctx.beginPath(); ctx.ellipse(-1.3, 0, 2.2, 1.2, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#5a4a30'; ctx.beginPath(); ctx.ellipse(0.9, 0, 1.2, 1.1, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#d23a2c';
+  ctx.beginPath(); ctx.arc(2.1, -0.7, 0.6, 0, 7); ctx.arc(2.1, 0.7, 0.6, 0, 7); ctx.fill();
+  ctx.restore();
+  // threat (looming shadow)
+  if (S.threat) {
+    ctx.fillStyle = `rgba(20,0,5,${0.35 + S.threat.age * 0.3})`; ctx.strokeStyle = 'rgba(255,77,94,.7)'; ctx.lineWidth = 0.4;
+    ctx.beginPath(); ctx.arc(S.threat.x, S.threat.y, S.threat.r, 0, 7); ctx.fill(); ctx.stroke();
+  }
+  ctx.restore();
+  ctx.fillStyle = '#4c6075'; ctx.font = '11px JetBrains Mono, monospace'; ctx.textAlign = 'left';
+  ctx.fillText(`${W}×${H} cm`, view.ox + 6, view.oy + H * s - 6);
+}
+
+/* ---------------- chart ---------------- */
+function drawChart() {
+  const c = $('#chart'), { ctx, w, h } = fit(c);
+  ctx.clearRect(0, 0, w, h);
+  const hs = S.hist, n = 240;
+  const line = (key, max, col) => {
+    ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.beginPath();
+    hs.forEach((p, i) => { const x = w - (hs.length - 1 - i) * (w / n), y = h - 6 - (p[key] / max) * (h - 12); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+  };
+  line('bat', 100, '#ffc24b'); line('spd', 50, '#4fb3ff'); line('alt', 200, '#3ee6a8');
+}
+
+/* ---------------- telemetry UI ---------------- */
+const deg = r => ((r * 180 / Math.PI) % 360 + 360 + 90) % 360; // 0 = north (up)
+function updateTelemetryUI() {
+  const f = S.fly;
+  $('#sBat').innerHTML = `${S.bat.toFixed(0)}<small>%</small>`;
+  const bb = $('#bBat'); bb.style.width = S.bat + '%'; bb.style.background = S.bat < 20 ? 'var(--danger)' : S.bat < 40 ? 'var(--warn)' : 'var(--accent)';
+  $('#sAlt').innerHTML = `${f.alt.toFixed(0)}<small> ס״מ</small>`;
+  $('#sSpd').innerHTML = `${f.spd.toFixed(0)}<small> ס״מ/ש׳</small>`;
+  $('#sHdg').innerHTML = `${deg(f.h).toFixed(0)}<small>°</small>`;
+  const flapping = S.wing.ampL + S.wing.ampR > 0;
+  $('#sHz').innerHTML = `${flapping ? S.wing.hz : 0}<small> Hz</small>`;
+  $('#sMode').textContent = !S.armed ? 'כבוי' : S.landing ? 'נוחת' : S.flying ? (S.auto ? 'טיסה עצמאית' : 'בטיסה') : (S.auto ? 'הולך עצמאית' : 'על הקרקע');
+  const tt = Math.floor(S.flightTime);
+  $('#clock').textContent = `${String(Math.floor(tt / 60)).padStart(2, '0')}:${String(tt % 60).padStart(2, '0')}`;
+}
+
+/* ---------------- connection ---------------- */
+let link = null; // { send(str), close() }
+const NOTES = {
+  sim: 'מצב סימולציה: זבוב וירטואלי מגיב לפקודות. אפשר לבדוק את הממשק לפני שהרובוט בנוי.',
+  ws: 'חיבור אלחוטי (למשל ESP32 ב-WiFi). האתר ב-Netlify רץ ב-HTTPS, ולכן הדפדפן יאפשר רק כתובת wss:// מאובטחת. לבדיקות מקומיות אפשר לפתוח את index.html ישירות מהמחשב ולהשתמש ב-ws://.',
+  serial: 'חיבור בכבל USB לארדואינו או ESP32 (Web Serial, 115200 baud). עובד ב-Chrome וב-Edge במחשב. קוד לדוגמה לרובוט נמצא בתיקייה firmware.',
+};
+document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => {
+  if (link) disconnect();
+  document.querySelectorAll('#modeSeg button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); S.mode = b.dataset.mode;
+  $('#wsBox').style.display = S.mode === 'ws' ? 'block' : 'none';
+  $('#connNote').textContent = NOTES[S.mode];
+  S.connected = S.mode === 'sim'; S.sensors = null; S.armed = false; S.flying = false;
+  updateConnUI(); updateArmUI();
+});
+$('#connBtn').onclick = () => (link ? disconnect() : connect());
+
+function updateConnUI() {
+  $('#connDot').className = 'dot' + (S.connected ? ' on' : '');
+  $('#connTxt').textContent = S.mode === 'sim' ? 'סימולציה' : S.connected ? 'מחובר לרובוט' : 'מנותק';
+  $('#connBtn').textContent = link ? 'התנתק' : 'התחבר';
+  $('#connBtn').style.display = S.mode === 'sim' ? 'none' : '';
+}
+
+function onLine(line) {
+  line = line.trim(); if (!line) return;
+  let m; try { m = JSON.parse(line); } catch { log('← ' + line); return; }
+  if (m.t === 'tel') {
+    const f = S.fly;
+    if (m.bat != null) S.bat = m.bat;
+    if (m.alt != null) f.alt = m.alt;
+    if (m.spd != null) f.spd = m.spd;
+    if (m.hdg != null) f.h = (m.hdg - 90) * Math.PI / 180;
+    if (m.x != null) f.x = m.x; if (m.y != null) f.y = m.y;
+    if (m.sensors) S.sensors = m.sensors;
+  } else if (m.t === 'log') log('🤖 ' + m.msg);
+  else log('← ' + line);
+}
+
+async function connect() {
+  try {
+    if (S.mode === 'ws') {
+      const url = $('#wsUrl').value.trim();
+      if (location.protocol === 'https:' && url.startsWith('ws://')) log('שים לב: דף HTTPS לא יכול להתחבר ל-ws:// לא מאובטח', 'w');
+      const ws = new WebSocket(url);
+      await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('החיבור נכשל')); });
+      ws.onmessage = e => String(e.data).split('\n').forEach(onLine);
+      ws.onclose = () => { if (link) { log('החיבור נסגר', 'w'); link = null; S.connected = false; S.armed = false; updateConnUI(); updateArmUI(); } };
+      link = { send: s => ws.readyState === 1 && ws.send(s), close: () => ws.close() };
+    } else if (S.mode === 'serial') {
+      if (!('serial' in navigator)) throw new Error('הדפדפן לא תומך ב-Web Serial. צריך Chrome או Edge במחשב');
+      const port = await navigator.serial.requestPort();
+      await port.open({ baudRate: 115200 });
+      const enc = new TextEncoderStream(); const wDone = enc.readable.pipeTo(port.writable).catch(() => {});
+      const writer = enc.writable.getWriter();
+      const dec = new TextDecoderStream(); const rDone = port.readable.pipeTo(dec.writable).catch(() => {});
+      const reader = dec.readable.getReader();
+      let alive = true, buf = '';
+      (async () => {
+        while (alive) {
+          const { value, done } = await reader.read().catch(() => ({ done: true }));
+          if (done) break;
+          buf += value; const parts = buf.split('\n'); buf = parts.pop(); parts.forEach(onLine);
+        }
+      })();
+      link = {
+        send: s => writer.write(s).catch(() => {}),
+        close: async () => { alive = false; try { await reader.cancel(); await rDone; await writer.close(); await wDone; await port.close(); } catch {} },
+      };
+    }
+    S.connected = true; log('מחובר לרובוט ✔', 'ok');
+  } catch (err) { log('שגיאת חיבור: ' + err.message, 'e'); link = null; S.connected = false; }
+  updateConnUI();
+}
+function disconnect() {
+  const l = link; link = null; S.connected = false; S.armed = false; S.flying = false; S.sensors = null;
+  if (l) { l.send(JSON.stringify({ t: 'estop' }) + '\n'); l.close(); }
+  updateConnUI(); updateArmUI(); log('התנתק');
+}
+function send(obj) { if (link) link.send(JSON.stringify(obj) + '\n'); }
+
+let lastSend = 0;
+function sendCmd() {
+  const c = S.cmd, w = S.wing, r2 = v => Math.round(v * 100) / 100;
+  const pkt = { t: 'cmd', arm: S.armed ? 1 : 0, fly: S.flying ? 1 : 0, yaw: r2(c.yaw), pitch: r2(c.pitch), roll: r2(c.roll), climb: r2(c.climb), hz: w.hz, ampL: r2(w.ampL), ampR: r2(w.ampR), auto: S.auto ? 1 : 0 };
+  const s = JSON.stringify(pkt);
+  $('#packet').textContent = s;
+  if (link) link.send(s + '\n');
+}
+
+/* ---------------- main loop ---------------- */
+let last = performance.now(), histT = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; S.t += dt;
+  updateThreat(dt);
+  const bo = brainStep(dt);
+  S.escapeCd = Math.max(0, S.escapeCd - dt);
+  if (S.reflex && S.connected && bo.gf > 0.6 && S.escapeCd === 0) escape();
+  computeCmd(bo);
+  physics(dt);
+  if (S.flying) S.flightTime += dt;
+  if (S.mode === 'sim' && S.fly.spd > 0.5) { S.trail.push({ x: S.fly.x, y: S.fly.y }); if (S.trail.length > 400) S.trail.shift(); }
+  histT += dt; if (histT > 0.1) { histT = 0; S.hist.push({ alt: S.fly.alt, spd: S.fly.spd, bat: S.bat }); if (S.hist.length > 240) S.hist.shift(); }
+  if (now - lastSend > 50) { lastSend = now; sendCmd(); }
+  drawArena(); drawBrain(); drawChart(); updateTelemetryUI();
+  requestAnimationFrame(frame);
+}
+updateConnUI(); updateArmUI();
+log('מרכז השליטה של זבוב עלה 🪰', 'ok');
+log('טיפ: חמש, המריא והפעל „המוח שולט” — הזבוב יחפש את הבננה');
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

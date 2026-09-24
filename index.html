@@ -174,12 +174,14 @@ kbd{background:#1a2532;border:1px solid #2a3a4c;border-bottom-width:2px;border-r
 
   <div class="col">
     <section class="card">
-      <h2>🧠 המוח של זבוב <span class="sub">חיבורים מתוך FlyWire v783</span></h2>
+      <h2>🧠 המוח של זבוב <span class="sub" id="brainSub">חיבורים מתוך FlyWire v783</span></h2>
       <canvas id="brain"></canvas>
       <div class="tools">
         <label class="switch"><input type="checkbox" id="autoSw"><span class="t"></span> המוח שולט ברובוט</label>
         <label class="switch"><input type="checkbox" id="reflexSw" checked><span class="t"></span> רפלקס בריחה</label>
+        <button class="btn" id="realBtn" style="margin-inline-start:auto">🔗 חבר למוח האמיתי</button>
       </div>
+      <p class="note" id="realNote">עכשיו פועל המוח הפשוט (16 עיגולים). הכפתור מתחבר לשרת שמריץ את המוח המלא על המחשב שלך (<span class="mono">ws://localhost:8765</span>).</p>
       <div class="legend">
         <span><i style="background:#4fb3ff"></i>חישה</span>
         <span><i style="background:#b57bff"></i>עיבוד מרכזי</span>
@@ -386,8 +388,53 @@ function senseWorld() {
   return out;
 }
 
+/* ---------------- full brain (brain_server/server.py) ---------------- */
+// Optional: the whole FlyWire brain (Shiu et al. 2024) running on this computer.
+// If the server is not running, or the connection drops, the simple brain above keeps going.
+const REAL = { ws: null, url: 'ws://localhost:8765', open: false, rates: null, at: 0, wallMs: 0, sentAt: 0 };
+const REAL_NOTE = $('#realNote').innerHTML;
+const rateToAct = hz => 1 - Math.exp(-hz / 40); // spikes/s -> 0..1 (40 Hz ≈ 0.63)
+const realFresh = () => !!REAL.rates && performance.now() - REAL.at < Math.max(3000, REAL.wallMs * 3);
+function realUI(note) {
+  $('#realBtn').textContent = REAL.ws ? '⛔ נתק מהמוח האמיתי' : '🔗 חבר למוח האמיתי';
+  $('#realBtn').classList.toggle('active', REAL.open);
+  if (note !== undefined) $('#realNote').textContent = note;
+}
+function realDisconnect(reason) {
+  const ws = REAL.ws; REAL.ws = null; REAL.open = false; REAL.rates = null;
+  if (ws) { ws.onclose = ws.onerror = ws.onmessage = null; try { ws.close(); } catch (e) {} }
+  realUI();
+  if (reason) { $('#realNote').textContent = reason; log(reason, 'w'); } else $('#realNote').innerHTML = REAL_NOTE;
+}
+function realConnect() {
+  let ws;
+  try { ws = new WebSocket(REAL.url); } catch (e) { realDisconnect('לא ניתן להתחבר לשרת. ממשיכים עם המוח הפשוט.'); return; }
+  REAL.ws = ws; realUI('מתחבר ל־' + REAL.url + '…');
+  ws.onopen = () => { REAL.open = true; realUI('מחובר לשרת. ממתין לתשובה ראשונה מהמוח המלא…'); log('התחברנו לשרת של המוח המלא 🧠', 'ok'); };
+  ws.onerror = () => {}; // onclose follows and explains
+  ws.onclose = () => realDisconnect(REAL.open
+    ? 'החיבור לשרת נסגר. חוזרים למוח הפשוט.'
+    : 'השרת לא רץ (אין תשובה ב־localhost:8765). ממשיכים עם המוח הפשוט. הוראות הפעלה: docs/brain-server-windows.md');
+  ws.onmessage = e => {
+    let m; try { m = JSON.parse(e.data); } catch (err) { return; }
+    if (m.t === 'status') realUI(m.msg);
+    if (m.t === 'brain') {
+      REAL.rates = m.rates; REAL.at = performance.now(); REAL.wallMs = m.wallMs;
+      const slow = m.wallMs / Math.max(1, m.simMs);
+      const top = (m.top || []).slice(0, 4).map(([n, hz]) => `${n} ${Math.round(hz)}Hz`).join(', ');
+      realUI(`המוח המלא פועל: ${m.simMs} ms של מוח חושבו ב־${(m.wallMs / 1000).toFixed(1)} שניות (פי ${slow.toFixed(0)} לאט מהמציאות).` + (top ? ` הכי פעילים: ${top}` : ''));
+    }
+  };
+}
+$('#realBtn').onclick = () => REAL.ws ? realDisconnect() : realConnect();
+
 function brainStep(dt) {
   const inp = senseWorld();
+  if (REAL.open && performance.now() - REAL.sentAt > 100) { // sensors to the full brain, 10 times a second
+    REAL.sentAt = performance.now();
+    try { REAL.ws.send(JSON.stringify({ t: 'sense', ...inp })); } catch (e) {}
+  }
+  const real = realFresh() ? REAL.rates : null;
   noise.cx = lerp(noise.cx, (Math.random() - 0.5) * 2, dt * 2);
   const net = {}; NEURONS.forEach(n => net[n.id] = BIAS[n.id] || 0);
   for (const [a, b, w] of SYN) net[b] += A[a] * w;
@@ -395,6 +442,7 @@ function brainStep(dt) {
   for (const n of NEURONS) {
     let target;
     if (n.L === 0) target = clamp((inp[n.id] || 0) + Math.random() * 0.04, 0, 1);
+    else if (real && n.id in real) target = rateToAct(real[n.id]); // firing rate from the full brain
     else target = Math.max(0, Math.tanh(net[n.id]));
     const tau = n.id === 'gf' ? 0.03 : 0.12;
     A[n.id] = lerp(A[n.id], target, clamp(dt / tau, 0, 1));
@@ -702,6 +750,8 @@ function updateTelemetryUI() {
   const flapping = S.wing.ampL + S.wing.ampR > 0;
   $('#sHz').innerHTML = `${flapping ? S.wing.hz : 0}<small> Hz</small>`;
   $('#sMode').textContent = !S.armed ? 'כבוי' : S.landing ? 'נוחת' : S.flying ? (S.auto ? 'טיסה עצמאית' : 'בטיסה') : (S.auto ? 'הולך עצמאית' : 'על הקרקע');
+  const sub = realFresh() ? 'המוח המלא · 138,639 נוירונים' : 'חיבורים מתוך FlyWire v783';
+  if ($('#brainSub').textContent !== sub) $('#brainSub').textContent = sub;
   const tt = Math.floor(S.flightTime);
   $('#clock').textContent = `${String(Math.floor(tt / 60)).padStart(2, '0')}:${String(tt % 60).padStart(2, '0')}`;
 }

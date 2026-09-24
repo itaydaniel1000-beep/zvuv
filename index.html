@@ -86,6 +86,10 @@ pre.packet{margin:8px 0 0;background:#070b10;border:1px solid var(--line);border
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:8px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-inline-end:5px;vertical-align:-1px}
 .sources{display:grid;gap:6px;margin-top:10px}
+.brain-cfg{margin-top:8px;font-size:13px;color:var(--muted)}
+.brain-cfg summary{cursor:pointer}
+.brain-cfg .row{margin-top:6px;flex-wrap:nowrap}
+.brain-cfg .field{flex:1;min-width:0}
 .src-row{display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;color:var(--muted)}
 .src-row .dot{margin-top:5px;flex:none}
 .src-row b{display:block;color:var(--text);font-weight:700;font-size:13.5px}
@@ -191,7 +195,11 @@ kbd{background:#1a2532;border:1px solid #2a3a4c;border-bottom-width:2px;border-r
         <div class="src-row" id="srcFull"><span class="dot"></span><div><b>מוח מלא · FlyWire, 138,639 נוירונים</b><span id="srcFullTxt">לא מחובר</span></div></div>
         <div class="src-row" id="srcSimple"><span class="dot on"></span><div><b>מוח פשוט · 16 עיגולים</b><span id="srcSimpleTxt">שולט בהכל: ניווט לריח ולאור, הליכה קדימה ובריחה מאיום</span></div></div>
       </div>
-      <p class="note" id="realNote">הכפתור מתחבר לשרת שמריץ את המוח המלא על המחשב שלך (<span class="mono">ws://localhost:8765</span>). אז המוח המלא שולט בבריחה מאיום, והמוח הפשוט ממשיך לנווט לריח ולאור.</p>
+      <p class="note" id="realNote">הכפתור מתחבר למוח המלא של FlyWire שרץ בענן (Hugging Face Spaces). אז המוח המלא שולט בבריחה מאיום, והמוח הפשוט ממשיך לנווט לריח ולאור.</p>
+      <details class="brain-cfg" id="brainCfg"><summary>כתובת המוח המלא</summary>
+        <div class="row"><input class="field mono" id="brainUrl" dir="ltr" spellcheck="false" placeholder="HF user name / Space link / localhost"><button class="btn" id="brainUrlSave">שמור</button></div>
+        <p class="note" id="brainUrlNow"></p>
+      </details>
       <div class="legend">
         <span><i style="background:#4fb3ff"></i>חישה</span>
         <span><i style="background:#b57bff"></i>עיבוד מרכזי</span>
@@ -262,7 +270,7 @@ kbd{background:#1a2532;border:1px solid #2a3a4c;border-bottom-width:2px;border-r
         <li>הספים, קבועי הזמן והרעש שגורם לזבוב לשוטט הם פרמטרים של המודל ולא נתונים מדודים.</li>
       </ul>
       <h3>המוח המלא, ומה גילינו על אונת הריח</h3>
-      <p>אפשר לחבר את האתר למוח המלא של FlyWire: 138,639 נוירונים ו־15 מיליון חיבורים, במודל של Shiu et al. 2024 שרץ על המחשב שלך (כפתור „חבר למוח האמיתי”). כשהוא מחובר, המוח <b>היברידי</b>:</p>
+      <p>אפשר לחבר את האתר למוח המלא של FlyWire: 138,639 נוירונים ו־15 מיליון חיבורים, במודל של Shiu et al. 2024 שרץ בענן, ב־Hugging Face Spaces (כפתור „חבר למוח האמיתי”). כשהוא מחובר, המוח <b>היברידי</b>:</p>
       <ul>
         <li><b>המוח המלא שולט בבריחה מאיום.</b> נוירוני LPLC2 ו־LC4 מפעילים בו את Giant Fiber בקצב של כ־150–180 ספייקים בשנייה, בדיוק כמו בזבוב אמיתי. בתרשים, Giant Fiber מקבל טבעת לבנה ותווית „מוח מלא”.</li>
         <li><b>המוח הפשוט שולט בניווט לריח ולאור.</b> ניסינו לגרום למוח המלא לנווט לריח בלי לשנות אף חיבור. שינינו רק איך מזינים את הריח ואיך קוראים את הנוירונים היורדים, והוא לא הצליח.</li>
@@ -410,7 +418,27 @@ function senseWorld() {
 /* ---------------- full brain (brain_server/server.py) ---------------- */
 // Optional: the whole FlyWire brain (Shiu et al. 2024) running on this computer.
 // If the server is not running, or the connection drops, the simple brain above keeps going.
-const REAL = { ws: null, url: 'ws://localhost:8765', open: false, rates: null, at: 0, wallMs: 0, sentAt: 0 };
+// Where the full brain runs: a Hugging Face Space (hf_space/) or brain_server/server.py on this computer.
+const BRAIN_URL_DEFAULT = '';
+const REAL = { ws: null, url: '', open: false, rates: null, at: 0, wallMs: 0, sentAt: 0, wake: null };
+const hfHost = (owner, space) => `${owner}-${space}`.toLowerCase().replace(/[^a-z0-9-]/g, '-') + '.hf.space';
+// Accepts a Hugging Face user name, "user/space", a Space page link, an *.hf.space link or localhost.
+function normalizeBrainUrl(v) {
+  v = (v || '').trim();
+  if (!v) return '';
+  let m = v.match(/^(?:wss?:\/\/|https?:\/\/)?(localhost|127\.0\.0\.1)(?::(\d+))?/i);
+  if (m) return `ws://${m[1]}:${m[2] || 8765}/`;
+  if ((m = v.match(/huggingface\.co\/spaces\/([^/\s]+)\/([^/\s?#]+)/i))) return `wss://${hfHost(m[1], m[2])}/`;
+  if ((m = v.match(/^(?:https?|wss?):\/\/([^/\s]+)/i))) return `wss://${m[1]}/`;
+  if ((m = v.match(/^([\w.-]+)\/([\w.-]+)$/))) return `wss://${hfHost(m[1], m[2])}/`;
+  if (/^[\w.-]+$/.test(v)) return `wss://${hfHost(v, 'zvuv-brain')}/`;
+  return '';
+}
+function brainUrl() {
+  let saved = '';
+  try { saved = localStorage.getItem('zvuv.brainUrl') || ''; } catch (e) {}
+  return normalizeBrainUrl(new URLSearchParams(location.search).get('brain')) || saved || BRAIN_URL_DEFAULT;
+}
 const REAL_NOTE = $('#realNote').innerHTML;
 const rateToAct = hz => 1 - Math.exp(-hz / 40); // spikes/s -> 0..1 (40 Hz ≈ 0.63)
 // Hybrid brain: the full FlyWire model only drives the escape reflex (LPLC2/LC4 -> Giant Fiber
@@ -423,35 +451,56 @@ function updateSourceUI() {
   if ($('#brainSub').textContent !== sub) $('#brainSub').textContent = sub;
   const fullTxt = full
     ? `שולט בבריחה מאיום: LPLC2/LC4 ← Giant Fiber (עכשיו ${gf} ספייקים בשנייה). מגיב באיחור של כ־${(REAL.wallMs / 1000).toFixed(1)} שניות.`
-    : REAL.open ? 'מחובר, ממתין לתשובה ראשונה…' : 'לא מחובר';
+    : REAL.open ? 'מחובר, ממתין לתשובה ראשונה…' : REAL.wake ? 'מעירים את ה־Space…' : 'לא מחובר';
   const simpleTxt = full ? 'שולט בניווט לריח ולאור ובהליכה קדימה (DN שמאלה, ימינה וקדימה)'
     : 'שולט בהכל: ניווט לריח ולאור, הליכה קדימה ובריחה מאיום';
   if ($('#srcFullTxt').textContent !== fullTxt) $('#srcFullTxt').textContent = fullTxt;
   if ($('#srcSimpleTxt').textContent !== simpleTxt) $('#srcSimpleTxt').textContent = simpleTxt;
   $('#srcFull').classList.toggle('live', full);
-  $('#srcFull .dot').className = 'dot' + (full ? ' on' : REAL.open ? ' warn' : '');
+  $('#srcFull .dot').className = 'dot' + (full ? ' on' : REAL.open || REAL.wake ? ' warn' : '');
 }
 const realFresh = () => !!REAL.rates && performance.now() - REAL.at < Math.max(3000, REAL.wallMs * 3);
 function realUI(note) {
-  $('#realBtn').textContent = REAL.ws ? '⛔ נתק מהמוח האמיתי' : '🔗 חבר למוח האמיתי';
+  $('#realBtn').textContent = REAL.ws || REAL.wake ? '⛔ נתק מהמוח האמיתי' : '🔗 חבר למוח האמיתי';
   $('#realBtn').classList.toggle('active', REAL.open);
   if (note !== undefined) $('#realNote').textContent = note;
 }
 function realDisconnect(reason) {
   const ws = REAL.ws; REAL.ws = null; REAL.open = false; REAL.rates = null;
+  clearTimeout(REAL.wake); REAL.wake = null;
   if (ws) { ws.onclose = ws.onerror = ws.onmessage = null; try { ws.close(); } catch (e) {} }
   realUI();
   if (reason) { $('#realNote').textContent = reason; log(reason, 'w'); } else $('#realNote').innerHTML = REAL_NOTE;
 }
-function realConnect() {
+const WAKE_TRIES = 18; // a sleeping Space takes 1-3 minutes to start; retry every 10 s
+function realConnect(attempt = 0) {
+  const url = brainUrl();
+  if (!url) {
+    $('#brainCfg').open = true; $('#brainUrl').focus();
+    realUI('קודם צריך להזין למטה את כתובת ה־Space (או את שם המשתמש ב־Hugging Face).');
+    return;
+  }
+  REAL.url = url; REAL.wake = null;
   let ws;
-  try { ws = new WebSocket(REAL.url); } catch (e) { realDisconnect('לא ניתן להתחבר לשרת. ממשיכים עם המוח הפשוט.'); return; }
-  REAL.ws = ws; realUI('מתחבר ל־' + REAL.url + '…');
-  ws.onopen = () => { REAL.open = true; realUI('מחובר לשרת. ממתין לתשובה ראשונה מהמוח המלא…'); log('התחברנו לשרת של המוח המלא 🧠', 'ok'); };
+  try { ws = new WebSocket(url); } catch (e) { realDisconnect('הכתובת ' + url + ' לא תקינה. ממשיכים עם המוח הפשוט.'); return; }
+  REAL.ws = ws; realUI(attempt ? $('#realNote').textContent : 'מתחבר ל־' + url + '…');
+  ws.onopen = () => { REAL.open = true; realUI('מחובר. ממתין לתשובה ראשונה מהמוח המלא…'); log('התחברנו למוח המלא 🧠', 'ok'); };
   ws.onerror = () => {}; // onclose follows and explains
-  ws.onclose = () => realDisconnect(REAL.open
-    ? 'החיבור לשרת נסגר. חוזרים למוח הפשוט.'
-    : 'השרת לא רץ (אין תשובה ב־localhost:8765). ממשיכים עם המוח הפשוט. הוראות הפעלה: docs/brain-server-windows.md');
+  ws.onclose = () => {
+    if (REAL.open) { realDisconnect('החיבור למוח המלא נסגר. חוזרים למוח הפשוט.'); return; }
+    const hf = url.includes('.hf.space');
+    if (hf && attempt < WAKE_TRIES) {
+      // A free Space sleeps when unused; an ordinary page request wakes it up
+      if (attempt % 3 === 0) fetch(url.replace(/^wss:/, 'https:'), { mode: 'no-cors' }).catch(() => {});
+      ws.onclose = null; REAL.ws = null;
+      REAL.wake = setTimeout(() => realConnect(attempt + 1), 10000);
+      realUI(`ה־Space לא עונה עדיין. כנראה הוא ישן, ומעירים אותו (ניסיון ${attempt + 1} מתוך ${WAKE_TRIES}, כל 10 שניות, עד 3 דקות). בינתיים המוח הפשוט שולט.`);
+      return;
+    }
+    realDisconnect(hf
+      ? `ה־Space לא ענה (${url}). אפשר לפתוח את ${url.replace(/^wss:/, 'https:')} בלשונית אחרת כדי לראות אם הוא רץ. ממשיכים עם המוח הפשוט.`
+      : `השרת לא עונה ב־${url}. ממשיכים עם המוח הפשוט.`);
+  };
   ws.onmessage = e => {
     let m; try { m = JSON.parse(e.data); } catch (err) { return; }
     if (m.t === 'status') realUI(m.msg);
@@ -463,7 +512,20 @@ function realConnect() {
     }
   };
 }
-$('#realBtn').onclick = () => REAL.ws ? realDisconnect() : realConnect();
+$('#realBtn').onclick = () => REAL.ws || REAL.wake ? realDisconnect() : realConnect();
+function showBrainUrl() {
+  const u = brainUrl();
+  $('#brainUrlNow').textContent = u ? 'מתחבר ל־' + u : 'עוד לא הוגדרה כתובת.';
+  if (u && !$('#brainUrl').value) $('#brainUrl').value = u;
+}
+$('#brainUrlSave').onclick = () => {
+  const u = normalizeBrainUrl($('#brainUrl').value);
+  if (!u) { $('#brainUrlNow').textContent = 'לא הבנתי את הכתובת. אפשר להזין שם משתמש ב־Hugging Face או קישור ל־Space.'; return; }
+  try { localStorage.setItem('zvuv.brainUrl', u); } catch (e) {}
+  $('#brainUrl').value = u; showBrainUrl();
+  if (REAL.ws || REAL.wake) { realDisconnect(); realConnect(); }
+};
+showBrainUrl();
 
 function brainStep(dt) {
   const inp = senseWorld();

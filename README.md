@@ -42,7 +42,9 @@ npm i -D playwright && node data/behavior_test.cjs
 ```
 
 ## המוח המלא (Shiu et al. 2024)
-`brain_server/server.py` מריץ על המחשב את כל 138,639 הנוירונים של FlyWire (Brian2) ומדבר עם האתר דרך `ws://localhost:8765`. באתר לוחצים על **🔗 חבר למוח האמיתי**. אם השרת לא רץ, האתר ממשיך עם המוח הפשוט.
+**בענן (מומלץ):** התיקייה `hf_space/` מכילה Space של Hugging Face (Docker, חינמי) שמריץ את השרת עם `wss://`. ההוראות, כולל טקסט להעתקה ל-Claude בכרום, נמצאות ב-`docs/hf-space-setup.md`.
+
+**על המחשב:** `brain_server/server.py` מריץ על המחשב את כל 138,639 הנוירונים של FlyWire (Brian2) ומדבר עם האתר דרך `ws://localhost:8765`. באתר לוחצים על **🔗 חבר למוח האמיתי**. אם השרת לא רץ, האתר ממשיך עם המוח הפשוט.
 
 הוראות התקנה והפעלה צעד־צעד ל-Windows: `docs/brain-server-windows.md` (בקיצור: להתקין Python 3.12 וללחוץ פעמיים על `brain_server/start.bat`).
 

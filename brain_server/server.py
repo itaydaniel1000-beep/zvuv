@@ -42,19 +42,7 @@ dg/dt = -g / tau               : volt (unless refractory)
 rfc                            : second
 '''
 
-SENSORS = ('eyeL', 'eyeR', 'antL', 'antR', 'loom')   # what the site sends, each 0..1
-# Which neurons of each sensory group get the Poisson drive. Driving all 5,000 photoreceptors
-# or all 1,100 ORNs of a side at once sends the whole network into runaway excitation, so each
-# sensor drives the cell types that carry that stimulus:
-#   light -> R7 + R8 (UV / blue phototaxis runs through R7/R8), odor -> ORNs of the glomeruli
-#   that respond to fruit / fermentation esters (DM1 = Or42b, DM2, DM3, DM4, VA2, VM2).
-INPUT_TYPES = {
-    'eyeL': ['R7', 'R8'], 'eyeR': ['R7', 'R8'],
-    'antL': ['ORN_DM1', 'ORN_DM2', 'ORN_DM3', 'ORN_DM4', 'ORN_VA2', 'ORN_VM2'],
-    'antR': ['ORN_DM1', 'ORN_DM2', 'ORN_DM3', 'ORN_DM4', 'ORN_VA2', 'ORN_VM2'],
-    'loom': ['LPLC2', 'LC4'],
-}
-REPORT = ('eyeL', 'eyeR', 'antL', 'antR', 'loom', 'ol', 'al', 'mb', 'cx', 'gf', 'dnL', 'dnR', 'dnF')
+from build_brain import SENSORS, INPUT_TYPES, REPORT  # noqa: E402  (shared with the browser brain)
 
 
 class Brain:
@@ -135,9 +123,10 @@ class Brain:
         return dict(t='brain', rates=groups, top=top, simMs=step_ms, wallMs=round(wall), total=self.sim_ms)
 
 
-# Pages allowed to connect (browsers send Origin; 'null' = index.html opened from disk).
+# Pages allowed to connect (browsers send Origin; 'null' = index.html opened from disk;
+# localhost / 127.0.0.1 on any port are always allowed).
 # Anything else is refused so random sites cannot use a public server's CPU.
-DEFAULT_ORIGINS = 'https://itaydaniel1000-beep.github.io,null,http://localhost,http://127.0.0.1'
+DEFAULT_ORIGINS = 'https://itaydaniel1000-beep.github.io,null'
 
 STATUS_PAGE = '''<!doctype html><meta charset="utf-8"><title>zvuv brain</title>
 <body style="font-family:system-ui;background:#070b10;color:#dbe7f3;max-width:640px;margin:40px auto;padding:0 16px;line-height:1.6" dir="rtl">
@@ -204,7 +193,9 @@ async def serve(args):
         return Response(HTTPStatus.OK, 'OK', Headers([('Content-Type', 'text/html; charset=utf-8'),
                                                      ('Content-Length', str(len(body)))]), body)
 
-    origins = [o.strip() or None for o in args.origins.split(',')] + [None] if args.origins != '*' else None
+    import re
+    local = re.compile(r'https?://(localhost|127\.0\.0\.1)(:\d+)?')  # any local web server / port
+    origins = [o.strip() or None for o in args.origins.split(',')] + [local, None] if args.origins != '*' else None
     async with ws_serve(handler, args.host, args.port, max_size=2 ** 16, origins=origins, process_request=http_page):
         print(f'listening on ws://{args.host}:{args.port}  (Ctrl+C to stop)', flush=True)
         await sim_loop()

@@ -113,6 +113,23 @@ HAND_SET = [
 ]
 
 
+# ---------------------------------------------------------------- full-brain model I/O
+# Used by brain_server/server.py and by build_web_brain.py (the in-browser brain).
+SENSORS = ('eyeL', 'eyeR', 'antL', 'antR', 'loom')   # what the site sends, each 0..1
+# Which neurons of each sensory group get the Poisson drive. Driving all 5,000 photoreceptors
+# or all 1,100 ORNs of a side at once sends the whole network into runaway excitation, so each
+# sensor drives the cell types that carry that stimulus:
+#   light -> R7 + R8 (UV / blue phototaxis runs through R7/R8), odor -> ORNs of the glomeruli
+#   that respond to fruit / fermentation esters (DM1 = Or42b, DM2, DM3, DM4, VA2, VM2).
+INPUT_TYPES = {
+    'eyeL': ['R7', 'R8'], 'eyeR': ['R7', 'R8'],
+    'antL': ['ORN_DM1', 'ORN_DM2', 'ORN_DM3', 'ORN_DM4', 'ORN_VA2', 'ORN_VM2'],
+    'antR': ['ORN_DM1', 'ORN_DM2', 'ORN_DM3', 'ORN_DM4', 'ORN_VA2', 'ORN_VM2'],
+    'loom': ['LPLC2', 'LC4'],
+}
+REPORT = ('eyeL', 'eyeR', 'antL', 'antR', 'loom', 'ol', 'al', 'mb', 'cx', 'gf', 'dnL', 'dnR', 'dnF')
+
+
 def fetch():
     RAW.mkdir(exist_ok=True)
     for name, url in FILES.items():

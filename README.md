@@ -42,10 +42,11 @@ npm i -D playwright && node data/behavior_test.cjs
 ```
 
 ## המוח המלא (Shiu et al. 2024)
-**בענן (מומלץ):** התיקייה `hf_space/` מכילה Space של Hugging Face (Docker, חינמי) שמריץ את השרת עם `wss://`. ההוראות, כולל טקסט להעתקה ל-Claude בכרום, נמצאות ב-`docs/hf-space-setup.md`.
+**בדפדפן, בלי שרת:** הכפתור **🔗 חבר למוח האמיתי** מפעיל את כל 138,639 הנוירונים ו-15 מיליון החיבורים של FlyWire ב-Web Worker (`brain/worker.js` + `brain/fullbrain.js`). זה אותו מודל LIF של Shiu et al. 2024, והוא נותן בדיוק את אותם ספייקים כמו Brian2. הנתונים (`brain/flywire783.bin.gz`, ‏21MB) יורדים פעם אחת ונשמרים בדפדפן.
 
-**על המחשב:** `brain_server/server.py` מריץ על המחשב את כל 138,639 הנוירונים של FlyWire (Brian2) ומדבר עם האתר דרך `ws://localhost:8765`. באתר לוחצים על **🔗 חבר למוח האמיתי**. אם השרת לא רץ, האתר ממשיך עם המוח הפשוט.
+- יצירה מחדש של קובץ הנתונים: `python data/build_web_brain.py`
+- מדידת מהירות ב-Node: `node brain/bench.cjs`
 
-הוראות התקנה והפעלה צעד־צעד ל-Windows: `docs/brain-server-windows.md` (בקיצור: להתקין Python 3.12 וללחוץ פעמיים על `brain_server/start.bat`).
+**על המחשב, ב-Python (לניסויים):** `brain_server/server.py` מריץ את אותו מודל ב-Brian2. `brain_server/odor_probe.py` משתמש בו לניסויי הריח. כדי לחבר אליו את האתר, פותחים את האתר עם `?brain=ws://localhost:8765`. הוראות ל-Windows: `docs/brain-server-windows.md`.
 
 התוכנית המקורית: `docs/stage2-plan.md`. האם המוח המלא מנווט לריח (ממצא: לא, ולמה): `docs/odor-steering-findings.md`.

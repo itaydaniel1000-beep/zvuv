@@ -86,6 +86,7 @@ pre.packet{margin:8px 0 0;background:#070b10;border:1px solid var(--line);border
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:8px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-inline-end:5px;vertical-align:-1px}
 .sources{display:grid;gap:6px;margin-top:10px}
+.full-mode{margin-top:8px;font-size:13px;color:var(--muted)}
 .src-row{display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;color:var(--muted)}
 .src-row .dot{margin-top:5px;flex:none}
 .src-row b{display:block;color:var(--text);font-weight:700;font-size:13.5px}
@@ -191,7 +192,10 @@ kbd{background:#1a2532;border:1px solid #2a3a4c;border-bottom-width:2px;border-r
         <div class="src-row" id="srcFull"><span class="dot"></span><div><b>מוח מלא · FlyWire, 138,639 נוירונים</b><span id="srcFullTxt">לא מחובר</span></div></div>
         <div class="src-row" id="srcSimple"><span class="dot on"></span><div><b>מוח פשוט · 16 עיגולים</b><span id="srcSimpleTxt">שולט בהכל: ניווט לריח ולאור, הליכה קדימה ובריחה מאיום</span></div></div>
       </div>
-      <p class="note" id="realNote">הכפתור מפעיל בתוך הדפדפן את המוח המלא של FlyWire: 138,639 נוירונים ו־15 מיליון חיבורים. בפעם הראשונה הוא מוריד 21MB, ואחר כך הם נשמרים בדפדפן. המוח המלא שולט בבריחה מאיום, והמוח הפשוט ממשיך לנווט לריח ולאור.</p>
+      <div class="row full-mode"><span>המוח המלא שולט ב:</span>
+        <div class="seg" id="fullModeSeg"><button data-m="all" class="on">הכל</button><button data-m="escape">רק בריחה (היברידי)</button></div>
+      </div>
+      <p class="note" id="realNote">הכפתור מפעיל בתוך הדפדפן את המוח המלא של FlyWire: 138,639 נוירונים ו־15 מיליון חיבורים. בפעם הראשונה הוא מוריד 21MB, ואחר כך הם נשמרים בדפדפן. במצב „הכל” המוח המלא מחליט לבד, בלי עזרה מהמוח הפשוט. במצב „רק בריחה” הוא שולט בבריחה מאיום, והמוח הפשוט מנווט לריח ולאור.</p>
       <div class="legend">
         <span><i style="background:#4fb3ff"></i>חישה</span>
         <span><i style="background:#b57bff"></i>עיבוד מרכזי</span>
@@ -270,6 +274,7 @@ kbd{background:#1a2532;border:1px solid #2a3a4c;border-bottom-width:2px;border-r
       <p><b>הממצא:</b> במודל המלא אונת הריח היא מתג „הכל או כלום” ולא חיישן. קלט חלש מאוד לא עושה כלום. מעל סף נמוך, אפילו 2 ספייקים בשנייה בנוירוני הריח או 10 נוירוני הקרנה בצד אחד, כל אונת הריח „נדלקת” תוך 10–20 אלפיות שנייה, בשני הצדדים: נוירוני ההקרנה יורים בכ־85 Hz ונשארים במצב הזה. אחרי ההדלקה אין הבדל בין ריח משמאל לריח מימין. נוירון ההיגוי DNa02 יורה רק בצד שמאל בכל התנאים, ואף אחד מיותר ממאה זוגות הנוירונים היורדים לא מגיב בעקביות לצד של הריח.</p>
       <p>המידע על הצד קיים בחיווט: נוירוני הריח מעדיפים את אותו צד, ולכן המוח הפשוט מצליח לנווט. אבל מודל ספייקים שבו לכל סינפסה יש אותו משקל, בלי מנגנון שמגביל את העוצמה, מאבד את המידע הזה. המודל המלא נבדק במקור בעיקר על מעגלי טעם, ששם השאלה היא רק „נדלק או לא”. הפירוט ב־<span class="mono">docs/odor-steering-findings.md</span>.</p>
       <p>המוח המלא רץ ב־JavaScript בתוך הדפדפן, בלי שרת, ונותן בדיוק את אותם ספייקים כמו המודל המקורי ב־Brian2. כשיש איום הוא מהיר מזמן אמת. כשיש ריח הוא פי 2.5–4 יותר לאט, כי אז אונת הריח כולה יורה. הפירוט ב־<span class="mono">docs/browser-brain.md</span>.</p>
+      <p>במצב „המוח המלא שולט ב: הכל” אפשר לראות את המוח האמיתי לבד. הוא בורח מאיום כמו זבוב חי. כשיש ריח הוא מסתובב שמאלה במקום, לא משנה מאיזה צד הריח בא. לאור הוא לא מגיב, ובלי גירוי הוא לא זז. במצב „רק בריחה” המוח הפשוט מנווט, והזבוב מגיע לריח ולאור.</p>
       <h3>אילו תאים יושבים בכל עיגול</h3>
       <ul class="cells" id="cellList"></ul>
       <p class="src">מקורות: FlyWire v783 (Dorkenwald et al. 2024; Schlegel et al. 2024, Nature). הנוירוטרנסמיטרים לפי Eckstein et al. 2024, ורשימת החיבורים בעיבוד של Shiu et al. 2024. הסקריפט שמחשב את החיבורים נמצא ב־<span class="mono">data/build_brain.py</span>.</p>
@@ -415,19 +420,30 @@ function senseWorld() {
 const REAL = { link: null, where: '', open: false, rates: null, at: 0, wallMs: 0, sentAt: 0 };
 const REAL_NOTE = $('#realNote').innerHTML;
 const rateToAct = hz => 1 - Math.exp(-hz / 40); // spikes/s -> 0..1 (40 Hz ≈ 0.63)
-// Hybrid brain: the full FlyWire model only drives the escape reflex (LPLC2/LC4 -> Giant Fiber
-// works there). Odor and light steering stay with the simple brain, because in the full model the
-// antennal lobe ignites all-or-none and loses the odor side (docs/odor-steering-findings.md).
-const FROM_FULL_BRAIN = new Set(['gf']);
+// What the full FlyWire model drives:
+//  'all'    - every brain node, steering and walking included (the full brain alone). Only the
+//             step from DNs to wings and legs stays local: it happens in the ventral nerve cord,
+//             which is not part of FlyWire.
+//  'escape' - hybrid: only the escape reflex (LPLC2/LC4 -> Giant Fiber, which works in the full
+//             model). Odor and light steering stay with the simple brain, because in the full model
+//             the antennal lobe ignites all-or-none and loses the odor side
+//             (docs/odor-steering-findings.md).
+const FULL_NODES = { all: new Set(['ol', 'al', 'mb', 'cx', 'gf', 'dnL', 'dnR', 'dnF']), escape: new Set(['gf']) };
+let fullMode = 'all';
+const fromFull = id => FULL_NODES[fullMode].has(id);
 function updateSourceUI() {
-  const full = realFresh(), gf = full ? Math.round(REAL.rates.gf) : 0;
-  const sub = full ? 'מוח היברידי: בריחה מהמוח המלא' : 'חיבורים מתוך FlyWire v783';
+  const full = realFresh(), r = full ? REAL.rates : {}, hz = k => Math.round(r[k] || 0);
+  const all = fullMode === 'all';
+  const sub = !full ? 'חיבורים מתוך FlyWire v783' : all ? 'המוח המלא של FlyWire שולט בהכל' : 'מוח היברידי: בריחה מהמוח המלא';
   if ($('#brainSub').textContent !== sub) $('#brainSub').textContent = sub;
-  const fullTxt = full
-    ? `שולט בבריחה מאיום: LPLC2/LC4 ← Giant Fiber (עכשיו ${gf} ספייקים בשנייה). צעד של 50 אלפיות שנייה של מוח לוקח ${REAL.wallMs} אלפיות שנייה.`
-    : REAL.link ? 'נטען…' : 'כבוי';
-  const simpleTxt = full ? 'שולט בניווט לריח ולאור ובהליכה קדימה (DN שמאלה, ימינה וקדימה)'
-    : 'שולט בהכל: ניווט לריח ולאור, הליכה קדימה ובריחה מאיום';
+  const speed = `צעד של 50 אלפיות שנייה של מוח לוקח ${REAL.wallMs} אלפיות שנייה.`;
+  const fullTxt = !full ? (REAL.link ? 'נטען…' : 'כבוי')
+    : all ? `שולט בהכל: היגוי (DNa01/02), הליכה קדימה (DNa03, DNp09) ובריחה (Giant Fiber). עכשיו, בספייקים בשנייה: DN שמאל ${hz('dnL')}, DN ימין ${hz('dnR')}, DN קדימה ${hz('dnF')}, Giant Fiber ${hz('gf')}. ${speed}`
+    : `שולט בבריחה מאיום: LPLC2/LC4 ← Giant Fiber (עכשיו ${hz('gf')} ספייקים בשנייה). ${speed}`;
+  const simpleTxt = !full ? 'שולט בהכל: ניווט לריח ולאור, הליכה קדימה ובריחה מאיום'
+    : all ? 'לא שולט בשום החלטה. רק המעבר מה־DNs לכנפיים ולרגליים מחושב כאן, כי הוא קורה בחוט העצבי שבגוף, שלא נמצא ב־FlyWire.'
+    : 'שולט בניווט לריח ולאור ובהליכה קדימה (DN שמאלה, ימינה וקדימה)';
+  $('#srcSimple .dot').className = 'dot' + (full && all ? '' : ' on');
   if ($('#srcFullTxt').textContent !== fullTxt) $('#srcFullTxt').textContent = fullTxt;
   if ($('#srcSimpleTxt').textContent !== simpleTxt) $('#srcSimpleTxt').textContent = simpleTxt;
   $('#srcFull').classList.toggle('live', full);
@@ -484,6 +500,12 @@ function realConnect() {
   } catch (e) { realDisconnect(e.message + ' ממשיכים עם המוח הפשוט.'); }
 }
 $('#realBtn').onclick = () => REAL.link ? realDisconnect() : realConnect();
+$('#fullModeSeg').onclick = e => {
+  const m = e.target.dataset && e.target.dataset.m; if (!m) return;
+  fullMode = m;
+  $('#fullModeSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  log(m === 'all' ? 'המוח המלא שולט עכשיו בהכל' : 'מוח היברידי: המוח המלא שולט רק בבריחה', 'ok');
+};
 
 function brainStep(dt) {
   const inp = senseWorld();
@@ -499,7 +521,7 @@ function brainStep(dt) {
   for (const n of NEURONS) {
     let target;
     if (n.L === 0) target = clamp((inp[n.id] || 0) + Math.random() * 0.04, 0, 1);
-    else if (real && FROM_FULL_BRAIN.has(n.id)) target = rateToAct(real[n.id]); // firing rate from the full brain
+    else if (real && fromFull(n.id)) target = rateToAct(real[n.id]); // firing rate from the full brain
     else target = Math.max(0, Math.tanh(net[n.id]));
     const tau = n.id === 'gf' ? 0.03 : 0.12;
     A[n.id] = lerp(A[n.id], target, clamp(dt / tau, 0, 1));
@@ -511,7 +533,8 @@ function brainStep(dt) {
   for (let i = spikes.length - 1; i >= 0; i--) { spikes[i].p += dt * 1.8; if (spikes[i].p >= 1) spikes.splice(i, 1); }
 
   // wandering in autonomous mode: small random turns from central complex noise
-  const wander = S.auto ? noise.cx * 0.35 * A.cx : 0;
+  // (only the simple brain wanders; the full brain alone gets no help)
+  const wander = S.auto && !(real && fullMode === 'all') ? noise.cx * 0.35 * A.cx : 0;
   return { yaw: clamp((A.dnR - A.dnL) * 1.6 + wander, -1, 1), fwd: clamp(A.dnF, 0, 1), gf: A.gf, leg: A.leg };
 }
 
@@ -564,9 +587,11 @@ function drawBrain() {
     ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 7); ctx.fill();
     ctx.globalAlpha = 1; ctx.shadowBlur = 0;
     ctx.strokeStyle = n.c; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 7); ctx.stroke();
-    if (realFresh() && FROM_FULL_BRAIN.has(n.id)) { // driven by the full FlyWire brain
+    if (realFresh() && fromFull(n.id)) { // driven by the full FlyWire brain
       ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
       ctx.beginPath(); ctx.arc(n.x, n.y, r + 5, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (realFresh() && fullMode === 'escape' && n.id === 'gf') {
       const tag = 'מוח מלא', tw = ctx.measureText(tag).width + 12, ty = n.y - r - 20;
       ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect(n.x - tw / 2, ty, tw, 15, 7); ctx.fill();
       ctx.fillStyle = '#081018'; ctx.fillText(tag, n.x, ty + 11.5);
